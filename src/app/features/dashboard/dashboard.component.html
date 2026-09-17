@@ -345,7 +345,7 @@
       <div class="pt-3 border-t border-slate-100 space-y-2.5">
         <div class="flex items-center justify-between">
           <span class="text-[10px] uppercase font-bold text-slate-400 tracking-wider">
-            ÚLTIMAS FAENAS REGISTRADAS
+            {{ authService.esAdmin() ? 'ÚLTIMAS FAENAS REGISTRADAS' : 'MIS ÚLTIMAS FAENAS' }}
           </span>
           <span class="text-[11px] text-slate-400 font-medium">En tiempo real</span>
         </div>
@@ -374,7 +374,7 @@
             </div>
           } @empty {
             <div class="p-6 text-center text-xs text-slate-400">
-              No hay operaciones registradas todavía.
+              {{ authService.esAdmin() ? 'No hay operaciones registradas todavía.' : 'No tienes faenas registradas todavía. Tu historial está en $0.00 limpio.' }}
             </div>
           }
         </div>

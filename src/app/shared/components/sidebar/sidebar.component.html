@@ -87,7 +87,7 @@
           <svg class="w-4 h-4 opacity-75 group-hover:opacity-100" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/>
           </svg>
-          <span>Personal / Cuadrilla</span>
+          <span>{{ authService.esAdmin() ? 'Personal / Cuadrilla' : 'Mi Perfil' }}</span>
         </div>
         <span class="px-2 py-0.5 rounded-md text-[10px] font-mono font-bold bg-slate-100 text-slate-600">
           {{ personalCount() }}

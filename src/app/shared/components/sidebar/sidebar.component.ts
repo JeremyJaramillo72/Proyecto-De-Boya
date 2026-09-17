@@ -19,41 +19,19 @@ export class SidebarComponent {
   authService = inject(AuthService);
 
   descargasCount = computed(() => {
-    if (this.authService.esUsuario()) {
-      return this.dataService.descargas().filter(d => 
-        d.trabajadores.some(t => this.authService.esMiTrabajador(t))
-      ).length;
-    }
-    return this.dataService.descargas().length;
+    return this.dataService.misDescargas().length;
   });
 
   trailersCount = computed(() => {
-    if (this.authService.esUsuario()) {
-      return this.dataService.embarques().filter(e => 
-        e.trabajadores.some(t => this.authService.esMiTrabajador(t))
-      ).reduce((acc, e) => acc + Number(e.cantidad_trailers || 0), 0);
-    }
-    return this.dataService.totalTrailersEmbarcados();
+    return this.dataService.misEmbarques().reduce((acc, e) => acc + Number(e.cantidad_trailers || 0), 0);
   });
 
   auditoriaCount = computed(() => {
-    if (this.authService.esUsuario()) {
-      const descCount = this.dataService.descargas().filter(d => 
-        d.trabajadores.some(t => this.authService.esMiTrabajador(t))
-      ).length;
-      const embCount = this.dataService.embarques().filter(e => 
-        e.trabajadores.some(t => this.authService.esMiTrabajador(t))
-      ).length;
-      return descCount + embCount;
-    }
-    return this.dataService.descargas().length + this.dataService.embarques().length;
+    return this.dataService.misDescargas().length + this.dataService.misEmbarques().length;
   });
 
   personalCount = computed(() => {
-    if (this.authService.esUsuario()) {
-      return 1;
-    }
-    return this.dataService.trabajadores().length;
+    return this.dataService.misTrabajadores().length;
   });
 }
 

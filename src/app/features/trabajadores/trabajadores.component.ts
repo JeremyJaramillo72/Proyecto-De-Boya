@@ -31,6 +31,9 @@ export class TrabajadoresComponent {
   router = inject(Router);
 
   mostrarFormulario = signal<boolean>(false);
+  modoEdicion = signal<boolean>(false);
+  idEnEdicion = signal<string | null>(null);
+  trabajadorAEliminar = signal<any | null>(null);
   nombre = '';
   alias = '';
   telefono = '';
@@ -44,13 +47,26 @@ export class TrabajadoresComponent {
   // TOAST DE NOTIFICACIÓN
   mensajeExito = signal<string>('');
 
+  esMiTrabajador(t: { id?: string; nombre?: string; alias?: string; trabajador_id?: string; trabajador_nombre?: string }): boolean {
+    return this.authService.esMiTrabajador(t);
+  }
+
+  coincideTrabajador(t: { id: string; nombre: string; alias?: string }, dt: { trabajador_id: string; trabajador_nombre?: string }): boolean {
+    if (dt.trabajador_id === t.id) return true;
+    if (this.authService.esMiTrabajador(t) && this.authService.esMiTrabajador(dt)) return true;
+    const tNom = t.nombre?.trim().toLowerCase();
+    const tAlias = t.alias?.trim().toLowerCase();
+    const dtNom = dt.trabajador_nombre?.trim().toLowerCase();
+    if (dtNom && (dtNom === tNom || dtNom === tAlias)) return true;
+    return false;
+  }
+
   balancesTrabajadores = computed(() => {
-    let lista = this.dataService.trabajadores();
-    if (this.authService.esUsuario()) {
-      lista = lista.filter(t => this.authService.esMiTrabajador(t));
-    }
-    const descargas = this.dataService.descargas();
-    const embarques = this.dataService.embarques();
+    // Usa misTrabajadores() para que el rol USUARIO vea su ficha y los trabajadores que él mismo agregó
+    // y el rol ADMIN vea a toda la cuadrilla
+    const lista = this.dataService.misTrabajadores();
+    const descargas = this.dataService.misDescargas();
+    const embarques = this.dataService.misEmbarques();
 
     return lista.map(t => {
       let totalGanado = 0;
@@ -60,7 +76,7 @@ export class TrabajadoresComponent {
 
       for (const d of descargas) {
         for (const dt of d.trabajadores || []) {
-          if (dt.trabajador_id === t.id) {
+          if (this.coincideTrabajador(t, dt)) {
             totalGanado += dt.monto_individual;
             cantidadFaenas++;
             if (dt.pagado) totalPagado += dt.monto_individual;
@@ -71,7 +87,7 @@ export class TrabajadoresComponent {
 
       for (const e of embarques) {
         for (const et of e.trabajadores || []) {
-          if (et.trabajador_id === t.id) {
+          if (this.coincideTrabajador(t, et)) {
             totalGanado += et.monto_individual;
             cantidadFaenas++;
             if (et.pagado) totalPagado += et.monto_individual;
@@ -83,7 +99,7 @@ export class TrabajadoresComponent {
       return {
         id: t.id,
         nombre: t.nombre,
-        alias: t.alias,
+        alias: t.alias || t.nombre,
         telefono: t.telefono,
         total_ganado: totalGanado,
         total_pagado: totalPagado,
@@ -98,14 +114,14 @@ export class TrabajadoresComponent {
     const t = this.trabajadorAuditoria();
     if (!t) return [];
 
-    const descargas = this.dataService.descargas();
-    const embarques = this.dataService.embarques();
+    const descargas = this.dataService.misDescargas();
+    const embarques = this.dataService.misEmbarques();
     const resultado: FaenaTrabajadorItem[] = [];
 
     // 1. Descargas (Bajadas de Madera)
     for (const d of descargas) {
       for (const dt of d.trabajadores || []) {
-        if (dt.trabajador_id === t.id) {
+        if (this.coincideTrabajador(t, dt)) {
           resultado.push({
             id: 'desc_' + d.id + '_' + dt.trabajador_id,
             tipo: 'DESCARGA',
@@ -125,7 +141,7 @@ export class TrabajadoresComponent {
     // 2. Embarques de Tráilers
     for (const e of embarques) {
       for (const et of e.trabajadores || []) {
-        if (et.trabajador_id === t.id) {
+        if (this.coincideTrabajador(t, et)) {
           resultado.push({
             id: 'emb_' + e.id + '_' + et.trabajador_id,
             tipo: 'EMBARQUE',
@@ -146,15 +162,75 @@ export class TrabajadoresComponent {
     return resultado.sort((a, b) => b.fecha.localeCompare(a.fecha));
   });
 
-  async guardarTrabajador() {
-    if (!this.nombre.trim()) return;
+  puedeModificarTrabajador(item: any): boolean {
+    if (!item) return false;
+    // No se puede eliminar ni editar la propia cuenta desde esta tarjeta
+    if (this.esMiTrabajador(item)) return false;
+    // Admin puede editar/eliminar cuadrilla
+    if (this.authService.esAdmin()) return true;
+    // Usuario puede editar/eliminar a sus ayudantes agregados
+    return true;
+  }
 
-    await this.dataService.agregarTrabajador(this.nombre, this.alias, this.telefono);
+  iniciarEdicion(item: any) {
+    this.idEnEdicion.set(item.id);
+    this.nombre = item.nombre || '';
+    this.alias = item.alias || item.nombre || '';
+    this.telefono = item.telefono || '';
+    this.modoEdicion.set(true);
+    this.mostrarFormulario.set(true);
+    if (typeof window !== 'undefined') {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  }
+
+  cancelarEdicion() {
+    this.idEnEdicion.set(null);
+    this.modoEdicion.set(false);
     this.nombre = '';
     this.alias = '';
     this.telefono = '';
     this.mostrarFormulario.set(false);
-    this.mostrarNotificacion('Nuevo trabajador registrado en nómina');
+  }
+
+  iniciarEliminacion(item: any) {
+    this.trabajadorAEliminar.set(item);
+  }
+
+  cerrarModalEliminar() {
+    this.trabajadorAEliminar.set(null);
+  }
+
+  async confirmarEliminacion() {
+    const t = this.trabajadorAEliminar();
+    if (!t) return;
+
+    await this.dataService.eliminarTrabajador(t.id);
+    this.cerrarModalEliminar();
+    if (this.idEnEdicion() === t.id) {
+      this.cancelarEdicion();
+    }
+    this.mostrarNotificacion(this.authService.esAdmin() ? 'Trabajador eliminado de nómina' : 'Ayudante eliminado de tu personal');
+  }
+
+  async guardarTrabajador() {
+    if (!this.nombre.trim()) return;
+
+    if (this.modoEdicion() && this.idEnEdicion()) {
+      await this.dataService.actualizarTrabajador(this.idEnEdicion()!, {
+        nombre: this.nombre,
+        alias: this.alias,
+        telefono: this.telefono
+      });
+      const esAdmin = this.authService.esAdmin();
+      this.mostrarNotificacion(esAdmin ? 'Trabajador actualizado en nómina' : 'Ayudante actualizado con éxito');
+      this.cancelarEdicion();
+    } else {
+      await this.dataService.agregarTrabajador(this.nombre, this.alias, this.telefono);
+      const esAdmin = this.authService.esAdmin();
+      this.mostrarNotificacion(esAdmin ? 'Nuevo trabajador registrado en nómina' : 'Nuevo ayudante agregado a tu personal');
+      this.cancelarEdicion();
+    }
   }
 
   abrirAuditoria(item: any) {

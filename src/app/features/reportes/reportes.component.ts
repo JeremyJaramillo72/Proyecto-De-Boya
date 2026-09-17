@@ -126,8 +126,8 @@ export class ReportesComponent {
 
   // Mapeamos las faenas reales del patio (Descargas de Madera y Embarques de Tráilers)
   turnosFiltrados = computed<FaenaAuditoria[]>(() => {
-    const descargas = this.dataService.descargas();
-    const embarques = this.dataService.embarques();
+    const descargas = this.dataService.misDescargas();
+    const embarques = this.dataService.misEmbarques();
     const lista: FaenaAuditoria[] = [];
 
     // 1. Transformamos faenas de descarga de madera

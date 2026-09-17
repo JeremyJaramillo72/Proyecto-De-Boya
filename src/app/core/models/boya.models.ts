@@ -4,6 +4,8 @@ export interface Trabajador {
   alias: string;
   telefono?: string;
   activo: boolean;
+  usuario_id?: string;
+  usuario_creador?: string;
   created_at?: string;
 }
 
@@ -25,6 +27,8 @@ export interface DescargaMadera {
   tarifa_por_fila: number; // Por defecto $5.00
   total_pago: number;
   observaciones?: string;
+  usuario_id?: string;
+  usuario_creador?: string;
   trabajadores: DescargaTrabajador[];
   created_at?: string;
 }
@@ -46,6 +50,8 @@ export interface EmbarqueTrailer {
   tarifa_por_persona_trailer: number; // Por defecto $7.00
   total_pago: number;
   observaciones?: string;
+  usuario_id?: string;
+  usuario_creador?: string;
   trabajadores: EmbarqueTrabajador[];
   created_at?: string;
 }

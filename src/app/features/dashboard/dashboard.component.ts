@@ -51,84 +51,36 @@ export class DashboardComponent implements OnInit, OnDestroy {
     this.horaActual = ahora.toTimeString().split(' ')[0];
   }
 
-  // MÉTRICAS COMPUTADAS CON DISTINCIÓN DE ROL
+  // MÉTRICAS COMPUTADAS CON AISLAMIENTO ESTRICTO POR USUARIO
   misDescargasCount = computed(() => {
-    if (this.authService.esUsuario()) {
-      return this.dataService.descargas().filter(d => 
-        d.trabajadores.some(t => this.authService.esMiTrabajador(t))
-      ).length;
-    }
-    return this.dataService.descargas().length;
+    return this.dataService.misDescargas().length;
   });
 
   misCarrosCount = computed(() => {
-    if (this.authService.esUsuario()) {
-      return this.dataService.descargas()
-        .filter(d => d.trabajadores.some(t => this.authService.esMiTrabajador(t)))
-        .reduce((sum, d) => sum + Number(d.cantidad_carros || 0), 0);
-    }
     return this.dataService.totalCarrosDescargados();
   });
 
   misTrailersCount = computed(() => {
-    if (this.authService.esUsuario()) {
-      return this.dataService.embarques()
-        .filter(e => e.trabajadores.some(t => this.authService.esMiTrabajador(t)))
-        .reduce((sum, e) => sum + Number(e.cantidad_trailers || 0), 0);
-    }
     return this.dataService.totalTrailersEmbarcados();
   });
 
   misDescargasCobrar = computed(() => {
-    if (this.authService.esUsuario()) {
-      return this.dataService.descargas().reduce((sum, d) => {
-        const mi = d.trabajadores.find(t => this.authService.esMiTrabajador(t));
-        return sum + (mi ? mi.monto_individual : 0);
-      }, 0);
-    }
-    return this.dataService.descargas().reduce((sum, d) => {
-      const individual = d.trabajadores?.[0]?.monto_individual ?? (d.total_pago / (d.trabajadores?.length || 1));
+    return this.dataService.misDescargas().reduce((sum, d) => {
+      const mi = d.trabajadores.find(t => this.authService.esMiTrabajador(t));
+      const individual = mi ? mi.monto_individual : (d.trabajadores?.[0]?.monto_individual ?? (d.total_pago / (d.trabajadores?.length || 1)));
       return sum + individual;
     }, 0);
   });
 
   totalDescargasPatioTotal = computed(() => {
-    return this.dataService.descargas().reduce((sum, d) => sum + d.total_pago, 0);
+    return this.dataService.misDescargas().reduce((sum, d) => sum + d.total_pago, 0);
   });
 
   miPendienteCobro = computed(() => {
-    if (this.authService.esUsuario()) {
-      let p = 0;
-      for (const d of this.dataService.descargas()) {
-        for (const t of d.trabajadores || []) {
-          if (this.authService.esMiTrabajador(t) && !t.pagado) p += Number(t.monto_individual || 0);
-        }
-      }
-      for (const e of this.dataService.embarques()) {
-        for (const t of e.trabajadores || []) {
-          if (this.authService.esMiTrabajador(t) && !t.pagado) p += Number(t.monto_individual || 0);
-        }
-      }
-      return p;
-    }
     return this.dataService.totalPendienteCobro();
   });
 
   miPagadoHistorico = computed(() => {
-    if (this.authService.esUsuario()) {
-      let p = 0;
-      for (const d of this.dataService.descargas()) {
-        for (const t of d.trabajadores || []) {
-          if (this.authService.esMiTrabajador(t) && t.pagado) p += Number(t.monto_individual || 0);
-        }
-      }
-      for (const e of this.dataService.embarques()) {
-        for (const t of e.trabajadores || []) {
-          if (this.authService.esMiTrabajador(t) && t.pagado) p += Number(t.monto_individual || 0);
-        }
-      }
-      return p;
-    }
     return this.dataService.totalPagadoHistorico();
   });
 
@@ -153,9 +105,9 @@ export class DashboardComponent implements OnInit, OnDestroy {
   });
 
   topTrabajadores = computed<TopTrabajador[]>(() => {
-    const lista = this.dataService.trabajadores();
-    const descargas = this.dataService.descargas();
-    const embarques = this.dataService.embarques();
+    const lista = this.dataService.misTrabajadores();
+    const descargas = this.dataService.misDescargas();
+    const embarques = this.dataService.misEmbarques();
 
     const mapa = new Map<string, { nombre: string; total: number; faenas: number }>();
     for (const t of lista) {
@@ -184,14 +136,16 @@ export class DashboardComponent implements OnInit, OnDestroy {
 
     const items: TopTrabajador[] = [];
     mapa.forEach((val, key) => {
-      items.push({
-        id: key,
-        nombre: val.nombre,
-        total_ganado: val.total,
-        cantidad_faenas: val.faenas,
-        porcentaje: 0,
-        estado: 'Activo'
-      });
+      if (val.faenas > 0) {
+        items.push({
+          id: key,
+          nombre: val.nombre,
+          total_ganado: val.total,
+          cantidad_faenas: val.faenas,
+          porcentaje: 0,
+          estado: 'Activo'
+        });
+      }
     });
 
     items.sort((a, b) => b.total_ganado - a.total_ganado);
@@ -204,27 +158,31 @@ export class DashboardComponent implements OnInit, OnDestroy {
   });
 
   ultimasOperaciones = computed(() => {
-    const descargas = this.dataService.descargas().map(d => ({
-      id: d.id,
-      tipo: 'DESCARGA' as const,
-      fecha: d.fecha,
-      titulo: `${d.cantidad_carros} Carro(s) • ${d.filas_por_carro} filas`,
-      subtitulo: d.trabajadores.map(t => t.trabajador_nombre).join(', '),
-      monto: d.trabajadores[0]?.monto_individual ?? (d.total_pago / (d.trabajadores.length || 1)),
-      totalCarro: d.total_pago,
-      pagado: d.trabajadores.every(t => t.pagado)
-    }));
+    const descargas = this.dataService.misDescargas()
+      .filter(d => this.dataService.esMiRegistro(d))
+      .map(d => ({
+        id: d.id,
+        tipo: 'DESCARGA' as const,
+        fecha: d.fecha,
+        titulo: `${d.cantidad_carros} Carro(s) • ${d.filas_por_carro} filas`,
+        subtitulo: d.trabajadores.map(t => t.trabajador_nombre).join(', '),
+        monto: (d.trabajadores.find(t => this.authService.esMiTrabajador(t))?.monto_individual) ?? (d.total_pago / (d.trabajadores.length || 1)),
+        totalCarro: d.total_pago,
+        pagado: d.trabajadores.every(t => t.pagado)
+      }));
 
-    const embarques = this.dataService.embarques().map(e => ({
-      id: e.id,
-      tipo: 'EMBARQUE' as const,
-      fecha: e.fecha,
-      titulo: `${e.cantidad_trailers} Tráiler(s) de Boya`,
-      subtitulo: `${e.trabajadores.length} cargadores`,
-      monto: e.total_pago,
-      totalCarro: e.total_pago,
-      pagado: e.trabajadores.every(t => t.pagado)
-    }));
+    const embarques = this.dataService.misEmbarques()
+      .filter(e => this.dataService.esMiRegistro(e))
+      .map(e => ({
+        id: e.id,
+        tipo: 'EMBARQUE' as const,
+        fecha: e.fecha,
+        titulo: `${e.cantidad_trailers} Tráiler(s) de Boya`,
+        subtitulo: `${e.trabajadores.length} cargadores`,
+        monto: (e.trabajadores.find(t => this.authService.esMiTrabajador(t))?.monto_individual) ?? e.trabajadores[0]?.monto_individual ?? e.total_pago,
+        totalCarro: e.total_pago,
+        pagado: e.trabajadores.every(t => t.pagado)
+      }));
 
     return [...descargas, ...embarques]
       .sort((a, b) => b.fecha.localeCompare(a.fecha))
@@ -232,9 +190,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
   });
 
   exportarResumenCSV() {
-    const descargas = this.authService.esUsuario()
-      ? this.dataService.descargas().filter(d => d.trabajadores.some(t => this.authService.esMiTrabajador(t)))
-      : this.dataService.descargas();
+    const descargas = this.dataService.misDescargas();
 
     const rows = descargas.map(d => ({
       Fecha: d.fecha,

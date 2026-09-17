@@ -1,6 +1,7 @@
-import { Injectable, signal, computed } from '@angular/core';
+import { Injectable, signal, computed, inject } from '@angular/core';
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import { environment } from '../../../environments/environment';
+import { AuthService } from './auth.service';
 import {
   Trabajador,
   DescargaMadera,
@@ -21,6 +22,7 @@ const STORAGE_KEYS = {
 })
 export class DataService {
   private supabase: SupabaseClient | null = null;
+  public authService = inject(AuthService);
   public isUsingSupabase = signal<boolean>(false);
   public isConnected = signal<boolean>(false);
 
@@ -30,23 +32,144 @@ export class DataService {
   public embarques = signal<EmbarqueTrailer[]>([]);
   public cargando = signal<boolean>(false);
 
-  // Totales globales computados
+  // Lista unificada de trabajadores que garantiza incluir siempre al usuario en sesión
+  public todosLosTrabajadores = computed<Trabajador[]>(() => {
+    const lista = [...this.trabajadores()];
+    const user = this.authService.usuarioActual();
+    if (user) {
+      const uNom = (user.nombre || '').trim().toLowerCase();
+      const uUser = (user.usuario || '').trim().toLowerCase();
+      const yaExiste = lista.some(
+        t => (t.nombre || '').trim().toLowerCase() === uNom || 
+             (t.alias || '').trim().toLowerCase() === uUser ||
+             t.id.toLowerCase() === ('trab_' + uUser.replace(/\s+/g, '_'))
+      );
+      if (!yaExiste) {
+        lista.push({
+          id: 'trab_' + uUser.replace(/\s+/g, '_'),
+          nombre: user.nombre.trim(),
+          alias: user.usuario.trim(),
+          activo: user.activo !== false,
+          usuario_id: user.id,
+          usuario_creador: user.usuario
+        });
+      }
+    }
+    return lista;
+  });
+
+  // Lista de trabajadores visibles estrictamente para el usuario en sesión
+  public misTrabajadores = computed<Trabajador[]>(() => {
+    const user = this.authService.usuarioActual();
+    if (!user) return [];
+
+    const uId = user.id.toLowerCase().trim();
+    const uUser = user.usuario.toLowerCase().trim();
+    const listaOriginal = this.todosLosTrabajadores();
+
+    if (this.authService.esAdmin()) {
+      // El administrador ve a toda la cuadrilla del patio
+      return listaOriginal;
+    }
+
+    // Para el rol USUARIO: ve su propia ficha y los trabajadores que él mismo agregó
+    return listaOriginal.filter(t => {
+      if (this.authService.esMiTrabajador(t)) return true;
+
+      const regId = (t.usuario_id || '').toLowerCase().trim();
+      const regUser = (t.usuario_creador || '').toLowerCase().trim();
+      if (regId && regId === uId) return true;
+      if (regUser && regUser === uUser) return true;
+
+      return false;
+    });
+  });
+
+  /**
+   * Determina si un registro (descarga o embarque) pertenece estrictamente al usuario en sesión
+   */
+  public esMiRegistro(item: { usuario_id?: string; usuario_creador?: string } | null | undefined): boolean {
+    if (!item) return false;
+    const user = this.authService.usuarioActual();
+    if (!user) return false;
+
+    const uId = user.id.toLowerCase().trim();
+    const uUser = user.usuario.toLowerCase().trim();
+
+    const regId = (item.usuario_id || '').toLowerCase().trim();
+    const regUser = (item.usuario_creador || '').toLowerCase().trim();
+
+    // 1. Coincidencia por ID de usuario creador
+    if (regId && regId === uId) {
+      return true;
+    }
+
+    // 2. Coincidencia por username creador
+    if (regUser && regUser === uUser) {
+      return true;
+    }
+
+    // Si tiene creador explícito y no coincide con el usuario actual, NO es de él
+    if (regId || regUser) {
+      return false;
+    }
+
+    // 3. Registros históricos / legacy sin creador explícito pertenecen al Administrador Jeremy
+    return uUser === 'jeremy';
+  }
+
+  public parseCreatorTag(rawObs?: string): { usuario_id: string; usuario_creador: string; obsLimpia: string } {
+    const text = rawObs || '';
+    const match = text.match(/<!--uid:(.*?)\|usr:(.*?)-->/);
+    if (match) {
+      return {
+        usuario_id: match[1],
+        usuario_creador: match[2],
+        obsLimpia: text.replace(/<!--uid:.*?\|usr:.*?-->/g, '').trim()
+      };
+    }
+    return {
+      usuario_id: 'usr_admin_jeremy',
+      usuario_creador: 'Jeremy',
+      obsLimpia: text.trim()
+    };
+  }
+
+  public buildCreatorTag(obs: string | undefined, userId: string, usuario: string): { obsConTag: string; obsLimpia: string } {
+    const limpia = (obs || '').replace(/<!--uid:.*?\|usr:.*?-->/g, '').trim();
+    const tag = `<!--uid:${userId}|usr:${usuario}-->`;
+    return {
+      obsConTag: limpia ? `${limpia} ${tag}` : tag,
+      obsLimpia: limpia
+    };
+  }
+
+  // Registros reactivos filtrados estrictamente para el usuario actual
+  public misDescargas = computed(() =>
+    this.descargas().filter(d => this.esMiRegistro(d))
+  );
+
+  public misEmbarques = computed(() =>
+    this.embarques().filter(e => this.esMiRegistro(e))
+  );
+
+  // Totales computados estrictamente para el usuario actual
   public totalCarrosDescargados = computed(() =>
-    this.descargas().reduce((acc, d) => acc + Number(d.cantidad_carros || 0), 0)
+    this.misDescargas().reduce((acc, d) => acc + Number(d.cantidad_carros || 0), 0)
   );
 
   public totalTrailersEmbarcados = computed(() =>
-    this.embarques().reduce((acc, e) => acc + Number(e.cantidad_trailers || 0), 0)
+    this.misEmbarques().reduce((acc, e) => acc + Number(e.cantidad_trailers || 0), 0)
   );
 
   public totalPendienteCobro = computed(() => {
     let pendiente = 0;
-    for (const d of this.descargas()) {
+    for (const d of this.misDescargas()) {
       for (const t of d.trabajadores || []) {
         if (!t.pagado) pendiente += Number(t.monto_individual || 0);
       }
     }
-    for (const e of this.embarques()) {
+    for (const e of this.misEmbarques()) {
       for (const t of e.trabajadores || []) {
         if (!t.pagado) pendiente += Number(t.monto_individual || 0);
       }
@@ -56,12 +179,12 @@ export class DataService {
 
   public totalPagadoHistorico = computed(() => {
     let pagado = 0;
-    for (const d of this.descargas()) {
+    for (const d of this.misDescargas()) {
       for (const t of d.trabajadores || []) {
         if (t.pagado) pagado += Number(t.monto_individual || 0);
       }
     }
-    for (const e of this.embarques()) {
+    for (const e of this.misEmbarques()) {
       for (const t of e.trabajadores || []) {
         if (t.pagado) pagado += Number(t.monto_individual || 0);
       }
@@ -117,12 +240,48 @@ export class DataService {
       .select('*')
       .order('nombre', { ascending: true });
 
-    if (trabData && trabData.length > 0) {
-      this.trabajadores.set(trabData);
-    } else {
+    let listaTrab: Trabajador[] = trabData && trabData.length > 0
+      ? trabData.map(t => {
+          const parsed = this.parseCreatorTag(t.telefono);
+          return {
+            ...t,
+            telefono: parsed.obsLimpia,
+            usuario_id: t.usuario_id || parsed.usuario_id,
+            usuario_creador: t.usuario_creador || parsed.usuario_creador
+          };
+        })
+      : [];
+    if (listaTrab.length === 0) {
       // Si está vacía en Supabase, cargar semillas
       await this.sembrarSupabase();
+      listaTrab = this.generarTrabajadoresSemilla();
     }
+
+    // Sincronizar usuarios registrados en el sistema
+    const rawUsuarios = localStorage.getItem('boya_usuarios');
+    if (rawUsuarios) {
+      try {
+        const usuariosSistema: any[] = JSON.parse(rawUsuarios);
+        for (const u of usuariosSistema) {
+          const uNom = (u.nombre || '').trim().toLowerCase();
+          const uUser = (u.usuario || '').trim().toLowerCase();
+          const yaExiste = listaTrab.some(
+            t => (t.nombre || '').trim().toLowerCase() === uNom || (t.alias || '').trim().toLowerCase() === uUser
+          );
+          if (!yaExiste) {
+            listaTrab.push({
+              id: 'trab_' + uUser.replace(/\s+/g, '_'),
+              nombre: u.nombre.trim(),
+              alias: u.usuario.trim(),
+              activo: u.activo !== false
+            });
+          }
+        }
+      } catch (e) {
+        console.warn('Error leyendo boya_usuarios para sincronizar:', e);
+      }
+    }
+    this.trabajadores.set(listaTrab);
 
     // 2. Descargas con detalle de trabajadores
     const { data: descData } = await this.supabase
@@ -137,24 +296,29 @@ export class DataService {
       .order('fecha', { ascending: false });
 
     if (descData) {
-      const mapeadas: DescargaMadera[] = descData.map((d: any) => ({
-        id: d.id,
-        fecha: d.fecha,
-        cantidad_carros: d.cantidad_carros,
-        filas_por_carro: d.filas_por_carro,
-        tarifa_por_fila: d.tarifa_por_fila,
-        total_pago: d.total_pago,
-        observaciones: d.observaciones,
-        trabajadores: (d.trabajadores || []).map((dt: any) => ({
-          id: dt.id,
-          descarga_id: dt.descarga_id,
-          trabajador_id: dt.trabajador_id,
-          trabajador_nombre: dt.trabajador?.nombre || dt.trabajador?.alias || 'Trabajador',
-          monto_individual: dt.monto_individual,
-          pagado: dt.pagado,
-          fecha_pago: dt.fecha_pago
-        }))
-      }));
+      const mapeadas: DescargaMadera[] = descData.map((d: any) => {
+        const parsed = this.parseCreatorTag(d.observaciones);
+        return {
+          id: d.id,
+          fecha: d.fecha,
+          cantidad_carros: d.cantidad_carros,
+          filas_por_carro: d.filas_por_carro,
+          tarifa_por_fila: d.tarifa_por_fila,
+          total_pago: d.total_pago,
+          observaciones: parsed.obsLimpia,
+          usuario_id: parsed.usuario_id,
+          usuario_creador: parsed.usuario_creador,
+          trabajadores: (d.trabajadores || []).map((dt: any) => ({
+            id: dt.id,
+            descarga_id: dt.descarga_id,
+            trabajador_id: dt.trabajador_id,
+            trabajador_nombre: dt.trabajador?.nombre || dt.trabajador?.alias || 'Trabajador',
+            monto_individual: dt.monto_individual,
+            pagado: dt.pagado,
+            fecha_pago: dt.fecha_pago
+          }))
+        };
+      });
       this.descargas.set(mapeadas);
     }
 
@@ -171,23 +335,28 @@ export class DataService {
       .order('fecha', { ascending: false });
 
     if (embData) {
-      const mapeadasEmb: EmbarqueTrailer[] = embData.map((e: any) => ({
-        id: e.id,
-        fecha: e.fecha,
-        cantidad_trailers: e.cantidad_trailers,
-        tarifa_por_persona_trailer: e.tarifa_por_persona_trailer,
-        total_pago: e.total_pago,
-        observaciones: e.observaciones,
-        trabajadores: (e.trabajadores || []).map((et: any) => ({
-          id: et.id,
-          embarque_id: et.embarque_id,
-          trabajador_id: et.trabajador_id,
-          trabajador_nombre: et.trabajador?.nombre || et.trabajador?.alias || 'Trabajador',
-          monto_individual: et.monto_individual,
-          pagado: et.pagado,
-          fecha_pago: et.fecha_pago
-        }))
-      }));
+      const mapeadasEmb: EmbarqueTrailer[] = embData.map((e: any) => {
+        const parsed = this.parseCreatorTag(e.observaciones);
+        return {
+          id: e.id,
+          fecha: e.fecha,
+          cantidad_trailers: e.cantidad_trailers,
+          tarifa_por_persona_trailer: e.tarifa_por_persona_trailer,
+          total_pago: e.total_pago,
+          observaciones: parsed.obsLimpia,
+          usuario_id: parsed.usuario_id,
+          usuario_creador: parsed.usuario_creador,
+          trabajadores: (e.trabajadores || []).map((et: any) => ({
+            id: et.id,
+            embarque_id: et.embarque_id,
+            trabajador_id: et.trabajador_id,
+            trabajador_nombre: et.trabajador?.nombre || et.trabajador?.alias || 'Trabajador',
+            monto_individual: et.monto_individual,
+            pagado: et.pagado,
+            fecha_pago: et.fecha_pago
+          }))
+        };
+      });
       this.embarques.set(mapeadasEmb);
     }
   }
@@ -211,7 +380,16 @@ export class DataService {
     let listaTrab: Trabajador[] = [];
     if (rawTrab) {
       try {
-        listaTrab = JSON.parse(rawTrab);
+        const parsed: any[] = JSON.parse(rawTrab);
+        listaTrab = parsed.map(t => {
+          const tagInfo = this.parseCreatorTag(t.telefono);
+          return {
+            ...t,
+            telefono: tagInfo.obsLimpia,
+            usuario_id: t.usuario_id || tagInfo.usuario_id,
+            usuario_creador: t.usuario_creador || tagInfo.usuario_creador
+          };
+        });
       } catch (e) {
         listaTrab = [];
       }
@@ -255,14 +433,42 @@ export class DataService {
     localStorage.setItem(STORAGE_KEYS.TRABAJADORES, JSON.stringify(listaTrab));
 
     if (rawDesc) {
-      this.descargas.set(JSON.parse(rawDesc));
+      try {
+        const parsed: any[] = JSON.parse(rawDesc);
+        const mapped = parsed.map(d => {
+          const tagInfo = this.parseCreatorTag(d.observaciones);
+          return {
+            ...d,
+            observaciones: tagInfo.obsLimpia,
+            usuario_id: d.usuario_id || tagInfo.usuario_id,
+            usuario_creador: d.usuario_creador || tagInfo.usuario_creador
+          };
+        });
+        this.descargas.set(mapped);
+      } catch (e) {
+        this.descargas.set([]);
+      }
     } else {
       this.descargas.set([]);
       localStorage.setItem(STORAGE_KEYS.DESCARGAS, JSON.stringify([]));
     }
 
     if (rawEmb) {
-      this.embarques.set(JSON.parse(rawEmb));
+      try {
+        const parsed: any[] = JSON.parse(rawEmb);
+        const mapped = parsed.map(e => {
+          const tagInfo = this.parseCreatorTag(e.observaciones);
+          return {
+            ...e,
+            observaciones: tagInfo.obsLimpia,
+            usuario_id: e.usuario_id || tagInfo.usuario_id,
+            usuario_creador: e.usuario_creador || tagInfo.usuario_creador
+          };
+        });
+        this.embarques.set(mapped);
+      } catch (e) {
+        this.embarques.set([]);
+      }
     } else {
       this.embarques.set([]);
       localStorage.setItem(STORAGE_KEYS.EMBARQUES, JSON.stringify([]));
@@ -280,33 +486,101 @@ export class DataService {
   // MÉTODOS DE NEGOCIO: TRABAJADORES
   // ==========================================
   public async agregarTrabajador(nombre: string, alias?: string, telefono?: string): Promise<Trabajador> {
+    const user = this.authService.usuarioActual();
+    const userId = user?.id || 'usr_admin_jeremy';
+    const userNom = user?.usuario || 'Jeremy';
+    const tagInfo = this.buildCreatorTag(telefono, userId, userNom);
+
     const nuevo: Trabajador = {
       id: crypto.randomUUID ? crypto.randomUUID() : 'trab_' + Date.now(),
       nombre: nombre.trim(),
       alias: alias ? alias.trim() : nombre.trim(),
-      telefono: telefono?.trim() || '',
+      telefono: tagInfo.obsLimpia,
       activo: true,
+      usuario_id: userId,
+      usuario_creador: userNom,
       created_at: new Date().toISOString()
     };
 
     if (this.isUsingSupabase() && this.supabase) {
-      const { data, error } = await this.supabase
-        .from('trabajadores')
-        .insert({
-          nombre: nuevo.nombre,
-          alias: nuevo.alias,
-          telefono: nuevo.telefono,
-          activo: nuevo.activo
-        })
-        .select()
-        .single();
-      if (!error && data) nuevo.id = data.id;
+      try {
+        const { data, error } = await this.supabase
+          .from('trabajadores')
+          .insert({
+            nombre: nuevo.nombre,
+            alias: nuevo.alias,
+            telefono: tagInfo.obsConTag,
+            activo: nuevo.activo
+          })
+          .select()
+          .single();
+
+        if (!error && data) nuevo.id = data.id;
+      } catch (e) {
+        console.error('Error guardando trabajador en Supabase:', e);
+      }
     }
 
     const actualizados = [...this.trabajadores(), nuevo];
     this.trabajadores.set(actualizados);
     localStorage.setItem(STORAGE_KEYS.TRABAJADORES, JSON.stringify(actualizados));
     return nuevo;
+  }
+
+  public async actualizarTrabajador(id: string, datos: { nombre: string; alias?: string; telefono?: string }): Promise<void> {
+    const lista = this.trabajadores();
+    const actual = lista.find(t => t.id === id);
+    if (!actual) return;
+
+    const user = this.authService.usuarioActual();
+    const userId = actual.usuario_id || user?.id || 'usr_admin_jeremy';
+    const userNom = actual.usuario_creador || user?.usuario || 'Jeremy';
+    const tagInfo = this.buildCreatorTag(datos.telefono, userId, userNom);
+
+    const trabajadorActualizado: Trabajador = {
+      ...actual,
+      nombre: datos.nombre.trim(),
+      alias: (datos.alias && datos.alias.trim()) ? datos.alias.trim() : datos.nombre.trim(),
+      telefono: tagInfo.obsLimpia,
+      usuario_id: userId,
+      usuario_creador: userNom
+    };
+
+    if (this.isUsingSupabase() && this.supabase) {
+      try {
+        await this.supabase
+          .from('trabajadores')
+          .update({
+            nombre: trabajadorActualizado.nombre,
+            alias: trabajadorActualizado.alias,
+            telefono: tagInfo.obsConTag
+          })
+          .eq('id', id);
+      } catch (e) {
+        console.error('Error actualizando trabajador en Supabase:', e);
+      }
+    }
+
+    const actualizados = lista.map(t => t.id === id ? trabajadorActualizado : t);
+    this.trabajadores.set(actualizados);
+    localStorage.setItem(STORAGE_KEYS.TRABAJADORES, JSON.stringify(actualizados));
+  }
+
+  public async eliminarTrabajador(id: string): Promise<void> {
+    if (this.isUsingSupabase() && this.supabase) {
+      try {
+        await this.supabase
+          .from('trabajadores')
+          .delete()
+          .eq('id', id);
+      } catch (e) {
+        console.error('Error eliminando trabajador en Supabase:', e);
+      }
+    }
+
+    const actualizados = this.trabajadores().filter(t => t.id !== id);
+    this.trabajadores.set(actualizados);
+    localStorage.setItem(STORAGE_KEYS.TRABAJADORES, JSON.stringify(actualizados));
   }
 
   // ==========================================
@@ -341,6 +615,11 @@ export class DataService {
       };
     });
 
+    const user = this.authService.usuarioActual();
+    const userId = user?.id || 'usr_admin_jeremy';
+    const userNom = user?.usuario || 'Jeremy';
+    const tagInfo = this.buildCreatorTag(datos.observaciones, userId, userNom);
+
     const nuevaDescarga: DescargaMadera = {
       id: idDescarga,
       fecha: datos.fecha,
@@ -348,7 +627,9 @@ export class DataService {
       filas_por_carro: datos.filas_por_carro,
       tarifa_por_fila: tarifa,
       total_pago: totalPago,
-      observaciones: datos.observaciones || '',
+      observaciones: tagInfo.obsLimpia,
+      usuario_id: userId,
+      usuario_creador: userNom,
       trabajadores: listaTrabajadores,
       created_at: new Date().toISOString()
     };
@@ -363,7 +644,7 @@ export class DataService {
             filas_por_carro: nuevaDescarga.filas_por_carro,
             tarifa_por_fila: nuevaDescarga.tarifa_por_fila,
             total_pago: nuevaDescarga.total_pago,
-            observaciones: nuevaDescarga.observaciones
+            observaciones: tagInfo.obsConTag
           })
           .select()
           .single();
@@ -424,6 +705,10 @@ export class DataService {
       };
     });
 
+    const userId = descargaActual.usuario_id || this.authService.usuarioActual()?.id || 'usr_admin_jeremy';
+    const userNom = descargaActual.usuario_creador || this.authService.usuarioActual()?.usuario || 'Jeremy';
+    const tagInfo = this.buildCreatorTag(datos.observaciones, userId, userNom);
+
     const descargaModificada: DescargaMadera = {
       ...descargaActual,
       fecha: datos.fecha,
@@ -431,7 +716,9 @@ export class DataService {
       filas_por_carro: datos.filas_por_carro,
       tarifa_por_fila: tarifa,
       total_pago: totalPago,
-      observaciones: datos.observaciones || '',
+      observaciones: tagInfo.obsLimpia,
+      usuario_id: userId,
+      usuario_creador: userNom,
       trabajadores: listaTrabajadores
     };
 
@@ -445,7 +732,7 @@ export class DataService {
             filas_por_carro: datos.filas_por_carro,
             tarifa_por_fila: tarifa,
             total_pago: totalPago,
-            observaciones: datos.observaciones || ''
+            observaciones: tagInfo.obsConTag
           })
           .eq('id', id);
 
@@ -516,13 +803,20 @@ export class DataService {
       };
     });
 
+    const user = this.authService.usuarioActual();
+    const userId = user?.id || 'usr_admin_jeremy';
+    const userNom = user?.usuario || 'Jeremy';
+    const tagInfo = this.buildCreatorTag(datos.observaciones, userId, userNom);
+
     const nuevoEmbarque: EmbarqueTrailer = {
       id: idEmbarque,
       fecha: datos.fecha,
       cantidad_trailers: datos.cantidad_trailers,
       tarifa_por_persona_trailer: tarifa,
       total_pago: totalPago,
-      observaciones: datos.observaciones || '',
+      observaciones: tagInfo.obsLimpia,
+      usuario_id: userId,
+      usuario_creador: userNom,
       trabajadores: listaTrabajadores,
       created_at: new Date().toISOString()
     };
@@ -536,7 +830,7 @@ export class DataService {
             cantidad_trailers: nuevoEmbarque.cantidad_trailers,
             tarifa_por_persona_trailer: nuevoEmbarque.tarifa_por_persona_trailer,
             total_pago: nuevoEmbarque.total_pago,
-            observaciones: nuevoEmbarque.observaciones
+            observaciones: tagInfo.obsConTag
           })
           .select()
           .single();
@@ -596,13 +890,19 @@ export class DataService {
       };
     });
 
+    const userId = embarqueActual.usuario_id || this.authService.usuarioActual()?.id || 'usr_admin_jeremy';
+    const userNom = embarqueActual.usuario_creador || this.authService.usuarioActual()?.usuario || 'Jeremy';
+    const tagInfo = this.buildCreatorTag(datos.observaciones, userId, userNom);
+
     const embarqueModificado: EmbarqueTrailer = {
       ...embarqueActual,
       fecha: datos.fecha,
       cantidad_trailers: datos.cantidad_trailers,
       tarifa_por_persona_trailer: tarifa,
       total_pago: totalPago,
-      observaciones: datos.observaciones || '',
+      observaciones: tagInfo.obsLimpia,
+      usuario_id: userId,
+      usuario_creador: userNom,
       trabajadores: listaTrabajadores
     };
 
@@ -615,7 +915,7 @@ export class DataService {
             cantidad_trailers: datos.cantidad_trailers,
             tarifa_por_persona_trailer: tarifa,
             total_pago: totalPago,
-            observaciones: datos.observaciones || ''
+            observaciones: tagInfo.obsConTag
           })
           .eq('id', id);
 

@@ -55,15 +55,9 @@ export class DescargasComponent {
     const desde = this.fechaDesde();
     const hasta = this.fechaHasta();
     const texto = this.filtroTexto().trim().toLowerCase();
-    const esUsuario = this.authService.esUsuario();
 
-    return this.dataService.descargas().filter(d => {
-      // Si es rol USUARIO: SOLO mostrar las faenas donde este usuario participó
-      if (esUsuario) {
-        const participo = d.trabajadores.some(t => this.authService.esMiTrabajador(t));
-        if (!participo) return false;
-      }
-
+    // Filtra exclusivamente las descargas registradas por el usuario en sesión
+    return this.dataService.misDescargas().filter(d => {
       if (desde && d.fecha < desde) return false;
       if (hasta && d.fecha > hasta) return false;
       if (texto) {
@@ -113,10 +107,7 @@ export class DescargasComponent {
   getMiDetalle(d: DescargaMadera) {
     const encontrado = d.trabajadores.find(t => this.authService.esMiTrabajador(t));
     if (encontrado) return encontrado;
-    if (this.authService.esAdmin()) {
-      return d.trabajadores[0] || null;
-    }
-    return null;
+    return d.trabajadores[0] || null;
   }
 
   getCompaneros(d: DescargaMadera) {
@@ -130,12 +121,25 @@ export class DescargasComponent {
   }
 
   seleccionarTrabajadorPorDefecto() {
-    const lista = this.dataService.trabajadores();
+    const lista = this.dataService.misTrabajadores();
     const miTrab = lista.find(t => this.authService.esMiTrabajador(t));
     if (miTrab) {
       this.seleccionadosIds.set([miTrab.id]);
-    } else if (lista.length > 0) {
-      this.seleccionadosIds.set([lista[0].id]);
+    } else {
+      const user = this.authService.usuarioActual();
+      if (user) {
+        const idGenerado = 'trab_' + user.usuario.toLowerCase().replace(/\s+/g, '_');
+        const yaExiste = lista.some(t => t.id === idGenerado || t.alias?.toLowerCase() === user.usuario.toLowerCase());
+        if (!yaExiste) {
+          this.dataService.trabajadores.update(arr => [
+            ...arr,
+            { id: idGenerado, nombre: user.nombre || user.usuario, alias: user.usuario, activo: true }
+          ]);
+        }
+        this.seleccionadosIds.set([idGenerado]);
+      } else if (lista.length > 0) {
+        this.seleccionadosIds.set([lista[0].id]);
+      }
     }
   }
 
@@ -227,7 +231,7 @@ export class DescargasComponent {
   }
 
   seleccionarTodosTrabajadores() {
-    this.seleccionadosIds.set(this.dataService.trabajadores().map(t => t.id));
+    this.seleccionadosIds.set(this.dataService.misTrabajadores().map(t => t.id));
   }
 
   limpiarSeleccionTrabajadores() {
