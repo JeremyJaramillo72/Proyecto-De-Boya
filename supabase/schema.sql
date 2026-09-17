@@ -91,5 +91,7 @@ INSERT INTO public.trabajadores (nombre, alias) VALUES
     ('Josué', 'Josue'),
     ('Erick', 'Erick'),
     ('Adonis', 'Adonis'),
-    ('Kelvin', 'Kelvin')
+    ('Kelvin', 'Kelvin'),
+    ('Edwin', 'Edwin'),
+    ('Johan', 'Johan')
 ON CONFLICT DO NOTHING;
