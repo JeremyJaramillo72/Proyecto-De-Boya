@@ -20,9 +20,13 @@
     letter-spacing: -0.02em;
   }
 
-  app-header, app-sidebar, app-login {
+  app-header, app-login {
     display: block;
     width: 100%;
+  }
+
+  app-sidebar {
+    display: block;
   }
 }
 
