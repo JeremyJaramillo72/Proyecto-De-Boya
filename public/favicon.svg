@@ -1,0 +1,45 @@
+﻿<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128" width="100%" height="100%">
+  <defs>
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0b132b"/>
+      <stop offset="100%" stop-color="#020617"/>
+    </linearGradient>
+    <linearGradient id="topFace" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#34d399"/>
+      <stop offset="100%" stop-color="#10b981"/>
+    </linearGradient>
+    <linearGradient id="leftFace" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#059669"/>
+      <stop offset="100%" stop-color="#047857"/>
+    </linearGradient>
+    <linearGradient id="rightFace" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#10b981"/>
+      <stop offset="100%" stop-color="#065f46"/>
+    </linearGradient>
+    <filter id="glow" x="-25%" y="-25%" width="150%" height="150%">
+      <feDropShadow dx="0" dy="2" stdDeviation="5" flood-color="#10b981" flood-opacity="0.4"/>
+    </filter>
+  </defs>
+
+  <!-- Background squircle -->
+  <rect width="128" height="128" rx="28" fill="url(#bgGrad)"/>
+  <rect width="126" height="126" x="1" y="1" rx="27" fill="none" stroke="#334155" stroke-width="1.5" stroke-opacity="0.7"/>
+
+  <!-- Isometric 3D Balsa Cube -->
+  <g filter="url(#glow)">
+    <!-- Top Face -->
+    <polygon points="64,25 98,44 64,63 30,44" fill="url(#topFace)"/>
+    <!-- Left Face -->
+    <polygon points="30,44 64,63 64,101 30,82" fill="url(#leftFace)"/>
+    <!-- Right Face -->
+    <polygon points="64,63 98,44 98,82 64,101" fill="url(#rightFace)"/>
+
+    <!-- Crisp Outlines with Rounded Joins -->
+    <polygon points="64,25 98,44 64,63 30,44" fill="none" stroke="#a7f3d0" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"/>
+    <polygon points="30,44 64,63 64,101 30,82" fill="none" stroke="#34d399" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"/>
+    <polygon points="64,63 98,44 98,82 64,101" fill="none" stroke="#34d399" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"/>
+    
+    <!-- Central seam highlight -->
+    <line x1="64" y1="63" x2="64" y2="101" stroke="#6ee7b7" stroke-width="3" stroke-linecap="round"/>
+  </g>
+</svg>
