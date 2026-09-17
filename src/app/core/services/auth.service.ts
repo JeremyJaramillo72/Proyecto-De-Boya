@@ -113,7 +113,8 @@ export class AuthService {
   }
 
   /**
-   * Restaura la sesión activa guardada o inicia como Jeremy por defecto
+   * Restaura la sesión activa guardada en localStorage si existe.
+   * Si no hay sesión previa guardada, permanece sin autenticar para solicitar inicio de sesión.
    */
   private cargarSesionGuardada(): void {
     const sesionGuardada = localStorage.getItem(STORAGE_KEYS.SESION);
@@ -133,9 +134,8 @@ export class AuthService {
       }
     }
 
-    // Por defecto al abrir la aplicación, iniciamos la sesión como Jeremy
-    const jeremy = this.usuarios().find(u => u.usuario.toLowerCase() === 'jeremy') || ADMIN_POR_DEFECTO;
-    this.iniciarSesionUsuario(jeremy);
+    // Si no hay sesión guardada previa, requerir autenticación
+    this.usuarioActual.set(null);
   }
 
   /**

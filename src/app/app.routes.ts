@@ -10,7 +10,7 @@ import { authGuard, adminGuard } from './core/guards/auth.guard';
 
 export const routes: Routes = [
   { path: 'login', component: LoginComponent, title: 'Iniciar Sesión - BoyaControl' },
-  { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
+  { path: '', redirectTo: 'login', pathMatch: 'full' },
   { path: 'dashboard', component: DashboardComponent, canActivate: [authGuard], title: 'Dashboard - BoyaControl' },
   { path: 'descargas', component: DescargasComponent, canActivate: [authGuard], title: 'Bajada de Madera - BoyaControl' },
   { path: 'embarques', component: EmbarquesComponent, canActivate: [authGuard], title: 'Embarque Tráilers - BoyaControl' },
