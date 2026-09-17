@@ -139,13 +139,17 @@ export class AuthService {
     this.sincronizando.set(true);
 
     try {
-      // 1. Verificar si existe la tabla dedicada 'usuarios'
+      let cloudUsers: Usuario[] = [];
+      let existeTablaUsuarios = false;
+
+      // 1. Si existe la tabla dedicada 'usuarios', cargar sus cuentas
       const { data: uData, error: uErr } = await this.supabase
         .from('usuarios')
         .select('*');
 
-      if (!uErr && uData && uData.length > 0) {
-        const cloudUsers: Usuario[] = uData.map(row => ({
+      if (!uErr && uData) {
+        existeTablaUsuarios = true;
+        cloudUsers = uData.map(row => ({
           id: row.id,
           usuario: row.usuario,
           nombre: row.nombre,
@@ -156,23 +160,22 @@ export class AuthService {
           ultimo_acceso: row.ultimo_acceso,
           created_at: row.created_at
         }));
-        await this.fusionarUsuarios(cloudUsers);
-        return;
       }
 
-      // 2. Fallback resiliente: usar la tabla 'trabajadores' de Supabase
+      // 2. Revisar también 'trabajadores' por si hay cuentas con auth tag
       const { data: trabData, error: trabErr } = await this.supabase
         .from('trabajadores')
         .select('*');
 
       if (!trabErr && trabData) {
-        const cloudUsers: Usuario[] = [];
-        let jeremyEncontrado = false;
+        let jeremyEncontrado = cloudUsers.some(
+          u => u.usuario.toLowerCase() === ADMIN_POR_DEFECTO.usuario.toLowerCase()
+        );
 
         for (const row of trabData) {
           const auth = this.parseAuthTag(row.telefono);
           if (auth) {
-            const u: Usuario = {
+            const uTag: Usuario = {
               id: auth.id || row.id,
               usuario: auth.usuario || row.alias || row.nombre,
               nombre: auth.nombre || row.nombre,
@@ -183,8 +186,20 @@ export class AuthService {
               ultimo_acceso: auth.ultimo_acceso,
               created_at: row.created_at
             };
-            cloudUsers.push(u);
-            if (u.usuario.toLowerCase() === ADMIN_POR_DEFECTO.usuario.toLowerCase()) {
+
+            const yaEnLista = cloudUsers.some(
+              c => c.usuario.toLowerCase() === uTag.usuario.toLowerCase()
+            );
+
+            if (!yaEnLista) {
+              cloudUsers.push(uTag);
+              // Si la tabla formal 'usuarios' ya existe, migrar este usuario a dicha tabla
+              if (existeTablaUsuarios) {
+                await this.guardarUsuarioEnNube(uTag);
+              }
+            }
+
+            if (uTag.usuario.toLowerCase() === ADMIN_POR_DEFECTO.usuario.toLowerCase()) {
               jeremyEncontrado = true;
             }
           }
@@ -206,11 +221,13 @@ export class AuthService {
               activo: true
             });
           }
-          cloudUsers.unshift({ ...ADMIN_POR_DEFECTO });
+          if (!cloudUsers.some(c => c.usuario.toLowerCase() === ADMIN_POR_DEFECTO.usuario.toLowerCase())) {
+            cloudUsers.unshift({ ...ADMIN_POR_DEFECTO });
+          }
         }
-
-        await this.fusionarUsuarios(cloudUsers);
       }
+
+      await this.fusionarUsuarios(cloudUsers);
     } catch (e) {
       console.warn('Error en sincronización en la nube de usuarios:', e);
     } finally {
