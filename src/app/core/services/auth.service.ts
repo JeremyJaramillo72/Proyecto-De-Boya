@@ -1,5 +1,7 @@
 import { Injectable, signal, computed, inject } from '@angular/core';
 import { Router } from '@angular/router';
+import { createClient, SupabaseClient } from '@supabase/supabase-js';
+import { environment } from '../../../environments/environment';
 import { Usuario, NuevoUsuarioDTO, RegistroUsuarioDTO, RolUsuario } from '../models/usuario.models';
 
 const STORAGE_KEYS = {
@@ -14,7 +16,7 @@ const ADMIN_POR_DEFECTO: Usuario = {
   password: '1939',
   rol: 'ADMIN',
   activo: true,
-  created_at: new Date().toISOString().split('T')[0]
+  created_at: '2026-09-16'
 };
 
 @Injectable({
@@ -22,6 +24,11 @@ const ADMIN_POR_DEFECTO: Usuario = {
 })
 export class AuthService {
   private router = inject(Router);
+
+  // Cliente Supabase para sincronización en la nube entre múltiples dispositivos
+  private supabase: SupabaseClient | null = null;
+  public isUsingSupabase = signal<boolean>(false);
+  public sincronizando = signal<boolean>(false);
 
   // Lista de usuarios registrados en el sistema
   public usuarios = signal<Usuario[]>([]);
@@ -79,14 +86,345 @@ export class AuthService {
   }
 
   constructor() {
-    this.inicializarUsuarios();
+    this.inicializarSupabase();
+    this.inicializarUsuariosLocales();
     this.cargarSesionGuardada();
+    // Sincronizar en segundo plano con Supabase para traer usuarios de otros dispositivos
+    this.sincronizarConSupabase();
+  }
+
+  private inicializarSupabase(): void {
+    if (environment.supabaseUrl && environment.supabaseAnonKey && environment.supabaseUrl.startsWith('http')) {
+      try {
+        this.supabase = createClient(environment.supabaseUrl, environment.supabaseAnonKey);
+        this.isUsingSupabase.set(true);
+      } catch (err) {
+        console.warn('Error inicializando cliente Supabase en AuthService:', err);
+      }
+    }
+  }
+
+  private parseAuthTag(text: string | null | undefined): { id?: string; usuario?: string; nombre?: string; pass: string; rol: RolUsuario; email?: string; ultimo_acceso?: string } | null {
+    if (!text) return null;
+    const match = text.match(/<!--usr_auth:(.*?)-->/);
+    if (!match) return null;
+    try {
+      return JSON.parse(match[1]);
+    } catch (e) {
+      return null;
+    }
+  }
+
+  private buildAuthTag(user: Usuario, currentPhone?: string | null): string {
+    const cleanPhone = (currentPhone || '').replace(/<!--usr_auth:.*?-->/g, '').trim();
+    const payload = JSON.stringify({
+      id: user.id,
+      usuario: user.usuario,
+      nombre: user.nombre,
+      pass: user.password,
+      rol: user.rol,
+      email: user.email || '',
+      ultimo_acceso: user.ultimo_acceso || ''
+    });
+    const tag = `<!--usr_auth:${payload}-->`;
+    return cleanPhone ? `${cleanPhone} ${tag}` : tag;
+  }
+
+  /**
+   * Sincroniza los usuarios con Supabase para que cualquier cuenta creada en el móvil
+   * esté disponible de inmediato en la computadora y viceversa.
+   */
+  public async sincronizarConSupabase(): Promise<void> {
+    if (!this.isUsingSupabase() || !this.supabase) return;
+    this.sincronizando.set(true);
+
+    try {
+      // 1. Verificar si existe la tabla dedicada 'usuarios'
+      const { data: uData, error: uErr } = await this.supabase
+        .from('usuarios')
+        .select('*');
+
+      if (!uErr && uData && uData.length > 0) {
+        const cloudUsers: Usuario[] = uData.map(row => ({
+          id: row.id,
+          usuario: row.usuario,
+          nombre: row.nombre,
+          email: row.email || '',
+          password: row.password,
+          rol: row.rol || 'USUARIO',
+          activo: row.activo !== false,
+          ultimo_acceso: row.ultimo_acceso,
+          created_at: row.created_at
+        }));
+        await this.fusionarUsuarios(cloudUsers);
+        return;
+      }
+
+      // 2. Fallback resiliente: usar la tabla 'trabajadores' de Supabase
+      const { data: trabData, error: trabErr } = await this.supabase
+        .from('trabajadores')
+        .select('*');
+
+      if (!trabErr && trabData) {
+        const cloudUsers: Usuario[] = [];
+        let jeremyEncontrado = false;
+
+        for (const row of trabData) {
+          const auth = this.parseAuthTag(row.telefono);
+          if (auth) {
+            const u: Usuario = {
+              id: auth.id || row.id,
+              usuario: auth.usuario || row.alias || row.nombre,
+              nombre: auth.nombre || row.nombre,
+              email: auth.email || '',
+              password: auth.pass,
+              rol: auth.rol || 'USUARIO',
+              activo: row.activo !== false,
+              ultimo_acceso: auth.ultimo_acceso,
+              created_at: row.created_at
+            };
+            cloudUsers.push(u);
+            if (u.usuario.toLowerCase() === ADMIN_POR_DEFECTO.usuario.toLowerCase()) {
+              jeremyEncontrado = true;
+            }
+          }
+        }
+
+        // Si Jeremy no tiene auth tag en Supabase aún, agregárselo
+        if (!jeremyEncontrado) {
+          const jeremyRow = trabData.find(
+            r => (r.alias || '').toLowerCase() === 'jeremy' || (r.nombre || '').toLowerCase() === 'jeremy'
+          );
+          const tagJeremy = this.buildAuthTag(ADMIN_POR_DEFECTO, jeremyRow?.telefono);
+          if (jeremyRow) {
+            await this.supabase.from('trabajadores').update({ telefono: tagJeremy }).eq('id', jeremyRow.id);
+          } else {
+            await this.supabase.from('trabajadores').insert({
+              nombre: ADMIN_POR_DEFECTO.nombre,
+              alias: ADMIN_POR_DEFECTO.usuario,
+              telefono: tagJeremy,
+              activo: true
+            });
+          }
+          cloudUsers.unshift({ ...ADMIN_POR_DEFECTO });
+        }
+
+        await this.fusionarUsuarios(cloudUsers);
+      }
+    } catch (e) {
+      console.warn('Error en sincronización en la nube de usuarios:', e);
+    } finally {
+      this.sincronizando.set(false);
+    }
+  }
+
+  private async fusionarUsuarios(cloudUsers: Usuario[]): Promise<void> {
+    const mapa = new Map<string, Usuario>();
+
+    // Primero agregamos los de la nube
+    for (const u of cloudUsers) {
+      mapa.set(u.usuario.toLowerCase(), u);
+    }
+
+    // Si localmente hay usuarios creados sin conexión o en este dispositivo, los subimos a la nube
+    const locales = this.usuarios();
+    for (const localUser of locales) {
+      const key = localUser.usuario.toLowerCase();
+      if (!mapa.has(key)) {
+        mapa.set(key, localUser);
+        await this.guardarUsuarioEnNube(localUser);
+      }
+    }
+
+    // Asegurar que siempre esté Jeremy
+    if (!mapa.has(ADMIN_POR_DEFECTO.usuario.toLowerCase())) {
+      mapa.set(ADMIN_POR_DEFECTO.usuario.toLowerCase(), { ...ADMIN_POR_DEFECTO });
+    }
+
+    const listaFinal = Array.from(mapa.values());
+    this.usuarios.set(listaFinal);
+    this.guardarUsuariosEnStorage(listaFinal);
+
+    // Si hay sesión activa, refrescar sus datos
+    const actual = this.usuarioActual();
+    if (actual) {
+      const match = listaFinal.find(
+        u => u.id === actual.id || u.usuario.toLowerCase() === actual.usuario.toLowerCase()
+      );
+      if (match) {
+        this.usuarioActual.set(match);
+      }
+    }
+  }
+
+  public async buscarUsuarioEnNube(usuarioInput: string): Promise<Usuario | null> {
+    if (!this.isUsingSupabase() || !this.supabase) return null;
+    const uTrim = usuarioInput.trim().toLowerCase();
+
+    try {
+      // 1. Probar en tabla dedicada 'usuarios'
+      const { data: uData, error: uErr } = await this.supabase
+        .from('usuarios')
+        .select('*')
+        .ilike('usuario', uTrim)
+        .limit(1);
+
+      if (!uErr && uData && uData.length > 0) {
+        const row = uData[0];
+        const u: Usuario = {
+          id: row.id,
+          usuario: row.usuario,
+          nombre: row.nombre,
+          email: row.email || '',
+          password: row.password,
+          rol: row.rol || 'USUARIO',
+          activo: row.activo !== false,
+          ultimo_acceso: row.ultimo_acceso,
+          created_at: row.created_at
+        };
+        this.incorporarUsuarioLocal(u);
+        return u;
+      }
+
+      // 2. Probar en tabla 'trabajadores'
+      const { data: trabData } = await this.supabase
+        .from('trabajadores')
+        .select('*');
+
+      for (const row of trabData || []) {
+        const auth = this.parseAuthTag(row.telefono);
+        if (auth) {
+          const authUser = (auth.usuario || row.alias || row.nombre || '').trim().toLowerCase();
+          const authNom = (auth.nombre || row.nombre || '').trim().toLowerCase();
+          if (authUser === uTrim || authNom === uTrim || row.alias?.toLowerCase() === uTrim || row.nombre?.toLowerCase() === uTrim) {
+            const u: Usuario = {
+              id: auth.id || row.id,
+              usuario: auth.usuario || row.alias || row.nombre,
+              nombre: auth.nombre || row.nombre,
+              email: auth.email || '',
+              password: auth.pass,
+              rol: auth.rol || 'USUARIO',
+              activo: row.activo !== false,
+              ultimo_acceso: auth.ultimo_acceso,
+              created_at: row.created_at
+            };
+            this.incorporarUsuarioLocal(u);
+            return u;
+          }
+        }
+      }
+    } catch (e) {
+      console.warn('Error buscando usuario en tiempo real en Supabase:', e);
+    }
+    return null;
+  }
+
+  private incorporarUsuarioLocal(u: Usuario): void {
+    const actuales = this.usuarios();
+    const ya = actuales.some(item => item.usuario.toLowerCase() === u.usuario.toLowerCase());
+    if (!ya) {
+      const nueva = [...actuales, u];
+      this.usuarios.set(nueva);
+      this.guardarUsuariosEnStorage(nueva);
+    }
+  }
+
+  public async guardarUsuarioEnNube(u: Usuario): Promise<void> {
+    if (!this.isUsingSupabase() || !this.supabase) return;
+    try {
+      // 1. Probar tabla 'usuarios'
+      const { error: errU } = await this.supabase
+        .from('usuarios')
+        .upsert({
+          id: u.id,
+          usuario: u.usuario,
+          nombre: u.nombre,
+          email: u.email || '',
+          password: u.password,
+          rol: u.rol,
+          activo: u.activo,
+          ultimo_acceso: u.ultimo_acceso || null,
+          created_at: u.created_at || new Date().toISOString()
+        });
+
+      if (!errU) return;
+
+      // 2. Fallback en 'trabajadores'
+      const { data: trabData } = await this.supabase
+        .from('trabajadores')
+        .select('*');
+
+      let existente = null;
+      for (const row of trabData || []) {
+        const auth = this.parseAuthTag(row.telefono);
+        if (auth && (auth.id === u.id || auth.usuario?.toLowerCase() === u.usuario.toLowerCase())) {
+          existente = row;
+          break;
+        }
+        if ((row.alias || '').toLowerCase() === u.usuario.toLowerCase() || (row.nombre || '').toLowerCase() === u.nombre.toLowerCase()) {
+          existente = row;
+          break;
+        }
+      }
+
+      const authTag = this.buildAuthTag(u, existente ? existente.telefono : '');
+
+      if (existente) {
+        await this.supabase
+          .from('trabajadores')
+          .update({
+            nombre: u.nombre,
+            alias: u.usuario,
+            telefono: authTag,
+            activo: u.activo
+          })
+          .eq('id', existente.id);
+      } else {
+        await this.supabase
+          .from('trabajadores')
+          .insert({
+            nombre: u.nombre,
+            alias: u.usuario,
+            telefono: authTag,
+            activo: u.activo
+          });
+      }
+    } catch (e) {
+      console.warn('Error guardando usuario en nube:', e);
+    }
+  }
+
+  public async eliminarUsuarioEnNube(u: Usuario): Promise<void> {
+    if (!this.isUsingSupabase() || !this.supabase) return;
+    try {
+      await this.supabase.from('usuarios').delete().eq('id', u.id);
+    } catch (e) {}
+
+    try {
+      const { data: trabData } = await this.supabase
+        .from('trabajadores')
+        .select('*');
+
+      for (const row of trabData || []) {
+        const auth = this.parseAuthTag(row.telefono);
+        const coincide = (auth && (auth.id === u.id || auth.usuario?.toLowerCase() === u.usuario.toLowerCase())) ||
+          (row.alias || '').toLowerCase() === u.usuario.toLowerCase() ||
+          (row.nombre || '').toLowerCase() === u.nombre.toLowerCase();
+        if (coincide) {
+          const clean = (row.telefono || '').replace(/<!--usr_auth:.*?-->/g, '').trim();
+          await this.supabase
+            .from('trabajadores')
+            .update({ telefono: clean, activo: false })
+            .eq('id', row.id);
+        }
+      }
+    } catch (e) {}
   }
 
   /**
    * Carga los usuarios desde localStorage o inicializa con el administrador Jeremy
    */
-  private inicializarUsuarios(): void {
+  private inicializarUsuariosLocales(): void {
     const dataGuardada = localStorage.getItem(STORAGE_KEYS.USUARIOS);
     if (dataGuardada) {
       try {
@@ -141,7 +479,7 @@ export class AuthService {
   /**
    * Intenta iniciar sesión con usuario y contraseña
    */
-  public login(usuarioInput: string, passwordInput: string): { exito: boolean; mensaje: string } {
+  public async login(usuarioInput: string, passwordInput: string): Promise<{ exito: boolean; mensaje: string }> {
     const uTrim = usuarioInput.trim().toLowerCase();
     const pTrim = passwordInput.trim();
 
@@ -149,9 +487,17 @@ export class AuthService {
       return { exito: false, mensaje: 'Por favor ingresa usuario y contraseña' };
     }
 
-    const usuarioEncontrado = this.usuarios().find(
+    let usuarioEncontrado = this.usuarios().find(
       u => u.usuario.toLowerCase() === uTrim
     );
+
+    // Si no está localmente o la contraseña no coincide localmente, buscar en tiempo real en la nube
+    if (!usuarioEncontrado || (this.isUsingSupabase() && usuarioEncontrado.password !== pTrim)) {
+      const uCloud = await this.buscarUsuarioEnNube(uTrim);
+      if (uCloud) {
+        usuarioEncontrado = uCloud;
+      }
+    }
 
     if (!usuarioEncontrado) {
       return { exito: false, mensaje: 'Usuario no encontrado en el sistema' };
@@ -167,7 +513,7 @@ export class AuthService {
 
     // Actualizar último acceso
     const fechaHora = new Date().toLocaleString();
-    this.actualizarUsuario(usuarioEncontrado.id, { ultimo_acceso: fechaHora });
+    await this.actualizarUsuario(usuarioEncontrado.id, { ultimo_acceso: fechaHora });
 
     const usuarioActualizado = { ...usuarioEncontrado, ultimo_acceso: fechaHora };
     this.iniciarSesionUsuario(usuarioActualizado);
@@ -187,7 +533,7 @@ export class AuthService {
   /**
    * Crea un nuevo usuario en el sistema (Solo para Administradores)
    */
-  public crearUsuario(dto: NuevoUsuarioDTO): { exito: boolean; mensaje: string } {
+  public async crearUsuario(dto: NuevoUsuarioDTO): Promise<{ exito: boolean; mensaje: string }> {
     if (!this.esAdmin()) {
       return { exito: false, mensaje: 'Solo los administradores pueden crear nuevos usuarios' };
     }
@@ -200,10 +546,14 @@ export class AuthService {
       return { exito: false, mensaje: 'Todos los campos son obligatorios' };
     }
 
-    // Verificar si ya existe un usuario con ese login
-    const existe = this.usuarios().some(
+    // Verificar si ya existe en la nube o local
+    let existe = this.usuarios().some(
       u => u.usuario.toLowerCase() === usuarioTrim.toLowerCase()
     );
+    if (!existe && this.isUsingSupabase()) {
+      const uCloud = await this.buscarUsuarioEnNube(usuarioTrim);
+      if (uCloud) existe = true;
+    }
     if (existe) {
       return { exito: false, mensaje: `El usuario "${usuarioTrim}" ya existe en el sistema` };
     }
@@ -223,6 +573,9 @@ export class AuthService {
     this.usuarios.set(lista);
     this.guardarUsuariosEnStorage(lista);
 
+    // Guardar en la nube inmediatamente
+    await this.guardarUsuarioEnNube(nuevo);
+
     // Sincronizar automáticamente en la lista de trabajadores para faenas
     this.sincronizarTrabajador(nuevo);
 
@@ -233,7 +586,7 @@ export class AuthService {
    * Registro público de nuevo usuario desde la pantalla de login.
    * Asigna automáticamente el rol 'USUARIO' y activa la sesión de inmediato.
    */
-  public registrarPublico(dto: RegistroUsuarioDTO): { exito: boolean; mensaje: string } {
+  public async registrarPublico(dto: RegistroUsuarioDTO): Promise<{ exito: boolean; mensaje: string }> {
     const usuarioTrim = dto.usuario.trim();
     const nombreTrim = dto.nombre.trim();
     const passTrim = dto.password.trim();
@@ -246,10 +599,14 @@ export class AuthService {
       return { exito: false, mensaje: 'La contraseña debe tener al menos 3 caracteres' };
     }
 
-    // Verificar si ya existe un usuario con ese nombre de usuario
-    const existe = this.usuarios().some(
+    // Verificar si ya existe un usuario con ese nombre de usuario (local o nube)
+    let existe = this.usuarios().some(
       u => u.usuario.toLowerCase() === usuarioTrim.toLowerCase()
     );
+    if (!existe && this.isUsingSupabase()) {
+      const uCloud = await this.buscarUsuarioEnNube(usuarioTrim);
+      if (uCloud) existe = true;
+    }
     if (existe) {
       return { exito: false, mensaje: `El usuario "${usuarioTrim}" ya está registrado en el sistema` };
     }
@@ -268,6 +625,9 @@ export class AuthService {
     const lista = [...this.usuarios(), nuevo];
     this.usuarios.set(lista);
     this.guardarUsuariosEnStorage(lista);
+
+    // Guardar en la nube inmediatamente
+    await this.guardarUsuarioEnNube(nuevo);
 
     // Sincronizar automáticamente en la lista de trabajadores de patio
     this.sincronizarTrabajador(nuevo);
@@ -306,10 +666,12 @@ export class AuthService {
   /**
    * Actualiza datos de un usuario existente
    */
-  public actualizarUsuario(id: string, cambios: Partial<Usuario>): { exito: boolean; mensaje: string } {
+  public async actualizarUsuario(id: string, cambios: Partial<Usuario>): Promise<{ exito: boolean; mensaje: string }> {
+    let usuarioModificado: Usuario | null = null;
     const lista = this.usuarios().map(u => {
       if (u.id === id) {
-        return { ...u, ...cambios };
+        usuarioModificado = { ...u, ...cambios };
+        return usuarioModificado;
       }
       return u;
     });
@@ -318,11 +680,12 @@ export class AuthService {
     this.guardarUsuariosEnStorage(lista);
 
     // Si el usuario actualizado es el usuario en sesión, refrescamos su sesión
-    if (this.usuarioActual()?.id === id) {
-      const sesionActualizada = lista.find(u => u.id === id);
-      if (sesionActualizada) {
-        this.iniciarSesionUsuario(sesionActualizada);
-      }
+    if (this.usuarioActual()?.id === id && usuarioModificado) {
+      this.iniciarSesionUsuario(usuarioModificado);
+    }
+
+    if (usuarioModificado) {
+      await this.guardarUsuarioEnNube(usuarioModificado);
     }
 
     return { exito: true, mensaje: 'Usuario actualizado correctamente' };
@@ -331,7 +694,7 @@ export class AuthService {
   /**
    * Cambia la contraseña de cualquier usuario (para el Administrador)
    */
-  public cambiarPasswordUsuario(id: string, nuevaClave: string): { exito: boolean; mensaje: string } {
+  public async cambiarPasswordUsuario(id: string, nuevaClave: string): Promise<{ exito: boolean; mensaje: string }> {
     if (!this.esAdmin()) {
       return { exito: false, mensaje: 'Permiso denegado: solo Administradores pueden cambiar claves' };
     }
@@ -341,13 +704,13 @@ export class AuthService {
       return { exito: false, mensaje: 'La contraseña no puede estar vacía' };
     }
 
-    return this.actualizarUsuario(id, { password: claveTrim });
+    return await this.actualizarUsuario(id, { password: claveTrim });
   }
 
   /**
    * Permite al usuario actual cambiar sus propias credenciales (Usuario, Nombre y Clave)
    */
-  public cambiarMisCredenciales(nuevoUsuario: string, nuevoNombre: string, nuevaClave?: string): { exito: boolean; mensaje: string } {
+  public async cambiarMisCredenciales(nuevoUsuario: string, nuevoNombre: string, nuevaClave?: string): Promise<{ exito: boolean; mensaje: string }> {
     const sesion = this.usuarioActual();
     if (!sesion) {
       return { exito: false, mensaje: 'No hay una sesión activa' };
@@ -377,13 +740,13 @@ export class AuthService {
       cambios.password = nuevaClave.trim();
     }
 
-    return this.actualizarUsuario(sesion.id, cambios);
+    return await this.actualizarUsuario(sesion.id, cambios);
   }
 
   /**
    * Elimina un usuario del sistema (no se permite auto-eliminarse)
    */
-  public eliminarUsuario(id: string): { exito: boolean; mensaje: string } {
+  public async eliminarUsuario(id: string): Promise<{ exito: boolean; mensaje: string }> {
     if (!this.esAdmin()) {
       return { exito: false, mensaje: 'Solo los administradores pueden eliminar usuarios' };
     }
@@ -392,9 +755,15 @@ export class AuthService {
       return { exito: false, mensaje: 'No puedes eliminar tu propia cuenta de administrador en sesión' };
     }
 
+    const usuarioAEliminar = this.usuarios().find(u => u.id === id);
+
     const lista = this.usuarios().filter(u => u.id !== id);
     this.usuarios.set(lista);
     this.guardarUsuariosEnStorage(lista);
+
+    if (usuarioAEliminar) {
+      await this.eliminarUsuarioEnNube(usuarioAEliminar);
+    }
 
     return { exito: true, mensaje: 'Usuario eliminado del sistema' };
   }
@@ -402,7 +771,7 @@ export class AuthService {
   /**
    * Alterna el estado activo / inactivo de un usuario
    */
-  public alternarEstadoActivo(id: string): { exito: boolean; mensaje: string } {
+  public async alternarEstadoActivo(id: string): Promise<{ exito: boolean; mensaje: string }> {
     if (this.usuarioActual()?.id === id) {
       return { exito: false, mensaje: 'No puedes desactivar tu propia cuenta en sesión' };
     }
@@ -413,7 +782,7 @@ export class AuthService {
     }
 
     const nuevoEstado = !user.activo;
-    return this.actualizarUsuario(id, { activo: nuevoEstado });
+    return await this.actualizarUsuario(id, { activo: nuevoEstado });
   }
 
   private iniciarSesionUsuario(u: Usuario): void {

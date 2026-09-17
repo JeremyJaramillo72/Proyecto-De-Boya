@@ -59,11 +59,25 @@ CREATE TABLE IF NOT EXISTS public.embarque_trabajadores (
     created_at TIMESTAMPTZ DEFAULT timezone('utc'::text, now()) NOT NULL
 );
 
+-- 6. Tabla de Usuarios del Sistema (Cuentas sincronizadas multidispositivo)
+CREATE TABLE IF NOT EXISTS public.usuarios (
+    id TEXT PRIMARY KEY,
+    usuario TEXT UNIQUE NOT NULL,
+    nombre TEXT NOT NULL,
+    email TEXT,
+    password TEXT NOT NULL,
+    rol TEXT NOT NULL DEFAULT 'USUARIO',
+    activo BOOLEAN DEFAULT TRUE,
+    ultimo_acceso TEXT,
+    created_at TIMESTAMPTZ DEFAULT timezone('utc'::text, now()) NOT NULL
+);
+
 -- Índices para optimizar reportes por fecha y trabajador
 CREATE INDEX IF NOT EXISTS idx_descargas_fecha ON public.descargas_madera(fecha);
 CREATE INDEX IF NOT EXISTS idx_embarques_fecha ON public.embarques_trailer(fecha);
 CREATE INDEX IF NOT EXISTS idx_descarga_trabajadores_trabajador ON public.descarga_trabajadores(trabajador_id);
 CREATE INDEX IF NOT EXISTS idx_embarque_trabajadores_trabajador ON public.embarque_trabajadores(trabajador_id);
+CREATE INDEX IF NOT EXISTS idx_usuarios_login ON public.usuarios(usuario);
 
 -- ==============================================================================
 -- Políticas de Seguridad RLS (Row Level Security)
@@ -74,12 +88,14 @@ ALTER TABLE public.descargas_madera ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.descarga_trabajadores ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.embarques_trailer ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.embarque_trabajadores ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.usuarios ENABLE ROW LEVEL SECURITY;
 
 CREATE POLICY "Permitir todo en trabajadores" ON public.trabajadores FOR ALL USING (true) WITH CHECK (true);
 CREATE POLICY "Permitir todo en descargas_madera" ON public.descargas_madera FOR ALL USING (true) WITH CHECK (true);
 CREATE POLICY "Permitir todo en descarga_trabajadores" ON public.descarga_trabajadores FOR ALL USING (true) WITH CHECK (true);
 CREATE POLICY "Permitir todo en embarques_trailer" ON public.embarques_trailer FOR ALL USING (true) WITH CHECK (true);
 CREATE POLICY "Permitir todo en embarque_trabajadores" ON public.embarque_trabajadores FOR ALL USING (true) WITH CHECK (true);
+CREATE POLICY "Permitir todo en usuarios" ON public.usuarios FOR ALL USING (true) WITH CHECK (true);
 
 -- ==============================================================================
 -- DATOS INICIALES (Semilla extraída de tus libretas de control)
@@ -95,3 +111,7 @@ INSERT INTO public.trabajadores (nombre, alias) VALUES
     ('Edwin', 'Edwin'),
     ('Johan', 'Johan')
 ON CONFLICT DO NOTHING;
+
+INSERT INTO public.usuarios (id, usuario, nombre, password, rol, activo) VALUES
+    ('usr_admin_jeremy', 'Jeremy', 'Jeremy', '1939', 'ADMIN', true)
+ON CONFLICT (usuario) DO NOTHING;

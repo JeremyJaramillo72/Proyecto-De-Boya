@@ -23,12 +23,24 @@
       </p>
     </div>
 
-    <!-- Botón Crear Nuevo Usuario -->
-    <button (click)="abrirModalCrear()"
-      class="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-[#0f172a] hover:bg-slate-900 text-white font-semibold text-xs sm:text-sm transition-all shadow-xs apple-btn-active shrink-0 min-h-[40px] cursor-pointer">
-      <svg class="w-4 h-4 text-slate-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-      <span>Nuevo Usuario</span>
-    </button>
+    <div class="flex items-center gap-2">
+      <!-- Botón Sincronizar en la Nube -->
+      <button (click)="sincronizar()" [disabled]="authService.sincronizando()"
+        title="Sincronizar cuentas con la nube (Supabase) para reflejar cambios en móviles y computadoras"
+        class="inline-flex items-center justify-center gap-2 px-3.5 py-2.5 rounded-xl bg-white border border-slate-200/90 hover:bg-slate-50 text-slate-700 font-semibold text-xs sm:text-sm transition-all shadow-xs apple-btn-active shrink-0 min-h-[40px] cursor-pointer disabled:opacity-50">
+        <svg class="w-4 h-4 text-slate-500" [class.animate-spin]="authService.sincronizando()" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/>
+        </svg>
+        <span>{{ authService.sincronizando() ? 'Sincronizando...' : 'Sincronizar Nube' }}</span>
+      </button>
+
+      <!-- Botón Crear Nuevo Usuario -->
+      <button (click)="abrirModalCrear()"
+        class="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-[#0f172a] hover:bg-slate-900 text-white font-semibold text-xs sm:text-sm transition-all shadow-xs apple-btn-active shrink-0 min-h-[40px] cursor-pointer">
+        <svg class="w-4 h-4 text-slate-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        <span>Nuevo Usuario</span>
+      </button>
+    </div>
   </div>
 
   <!-- 2. SECCIÓN: MIS CREDENCIALES (ADMIN JEREMY) -->

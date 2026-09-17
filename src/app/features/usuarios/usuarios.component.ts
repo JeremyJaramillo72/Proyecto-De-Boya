@@ -77,9 +77,14 @@ export class UsuariosComponent {
     this.modalCrearAbierto.set(false);
   }
 
-  guardarNuevoUsuario(): void {
+  async sincronizar(): Promise<void> {
+    await this.authService.sincronizarConSupabase();
+    this.mostrarNotificacion('Cuentas sincronizadas con la nube');
+  }
+
+  async guardarNuevoUsuario(): Promise<void> {
     this.mensajeError.set('');
-    const res = this.authService.crearUsuario(this.nuevoUsuario);
+    const res = await this.authService.crearUsuario(this.nuevoUsuario);
     if (res.exito) {
       this.cerrarModalCrear();
       this.mostrarNotificacion(res.mensaje);
@@ -104,12 +109,12 @@ export class UsuariosComponent {
     this.usuarioEnEdicion.set(null);
   }
 
-  guardarEdicion(): void {
+  async guardarEdicion(): Promise<void> {
     const u = this.usuarioEnEdicion();
     if (!u) return;
 
     this.mensajeError.set('');
-    const res = this.authService.actualizarUsuario(u.id, {
+    const res = await this.authService.actualizarUsuario(u.id, {
       nombre: this.editNombre.trim(),
       usuario: this.editUsuario.trim(),
       rol: this.editRol,
@@ -137,7 +142,7 @@ export class UsuariosComponent {
     this.usuarioEnEdicion.set(null);
   }
 
-  guardarNuevaPassword(): void {
+  async guardarNuevaPassword(): Promise<void> {
     const u = this.usuarioEnEdicion();
     if (!u) return;
 
@@ -146,7 +151,7 @@ export class UsuariosComponent {
       return;
     }
 
-    const res = this.authService.cambiarPasswordUsuario(u.id, this.nuevaClave);
+    const res = await this.authService.cambiarPasswordUsuario(u.id, this.nuevaClave);
     if (res.exito) {
       this.cerrarModalPassword();
       this.mostrarNotificacion(`Contraseña actualizada para ${u.nombre}`);
@@ -156,9 +161,9 @@ export class UsuariosComponent {
   }
 
   // --- ELIMINAR / ALTERNAR ESTADO ---
-  eliminarUsuario(u: Usuario): void {
+  async eliminarUsuario(u: Usuario): Promise<void> {
     if (confirm(`¿Estás seguro de que deseas eliminar al usuario "${u.nombre}" (@${u.usuario})? Esta acción no se puede deshacer.`)) {
-      const res = this.authService.eliminarUsuario(u.id);
+      const res = await this.authService.eliminarUsuario(u.id);
       if (res.exito) {
         this.mostrarNotificacion(res.mensaje);
       } else {
@@ -167,8 +172,8 @@ export class UsuariosComponent {
     }
   }
 
-  alternarActivo(u: Usuario): void {
-    const res = this.authService.alternarEstadoActivo(u.id);
+  async alternarActivo(u: Usuario): Promise<void> {
+    const res = await this.authService.alternarEstadoActivo(u.id);
     if (res.exito) {
       this.mostrarNotificacion(`Estado de "${u.nombre}" actualizado`);
     } else {
@@ -177,9 +182,9 @@ export class UsuariosComponent {
   }
 
   // --- MIS CREDENCIALES (ADMIN JEREMY) ---
-  guardarMisCredenciales(): void {
+  async guardarMisCredenciales(): Promise<void> {
     this.mensajeError.set('');
-    const res = this.authService.cambiarMisCredenciales(
+    const res = await this.authService.cambiarMisCredenciales(
       this.miUsuario,
       this.miNombre,
       this.miNuevaClave

@@ -125,21 +125,25 @@ export class DataService {
       return {
         usuario_id: match[1],
         usuario_creador: match[2],
-        obsLimpia: text.replace(/<!--uid:.*?\|usr:.*?-->/g, '').trim()
+        obsLimpia: text.replace(/<!--uid:.*?\|usr:.*?-->/g, '').replace(/<!--usr_auth:.*?-->/g, '').trim()
       };
     }
     return {
       usuario_id: 'usr_admin_jeremy',
       usuario_creador: 'Jeremy',
-      obsLimpia: text.trim()
+      obsLimpia: text.replace(/<!--usr_auth:.*?-->/g, '').trim()
     };
   }
 
   public buildCreatorTag(obs: string | undefined, userId: string, usuario: string): { obsConTag: string; obsLimpia: string } {
-    const limpia = (obs || '').replace(/<!--uid:.*?\|usr:.*?-->/g, '').trim();
+    const raw = obs || '';
+    const authMatch = raw.match(/<!--usr_auth:(.*?)-->/);
+    const authTag = authMatch ? ` ${authMatch[0]}` : '';
+
+    const limpia = raw.replace(/<!--uid:.*?\|usr:.*?-->/g, '').replace(/<!--usr_auth:.*?-->/g, '').trim();
     const tag = `<!--uid:${userId}|usr:${usuario}-->`;
     return {
-      obsConTag: limpia ? `${limpia} ${tag}` : tag,
+      obsConTag: (limpia ? `${limpia} ${tag}` : tag) + authTag,
       obsLimpia: limpia
     };
   }
@@ -548,12 +552,21 @@ export class DataService {
 
     if (this.isUsingSupabase() && this.supabase) {
       try {
+        const { data: dbRow } = await this.supabase
+          .from('trabajadores')
+          .select('telefono')
+          .eq('id', id)
+          .single();
+
+        const authMatch = (dbRow?.telefono || '').match(/<!--usr_auth:(.*?)-->/);
+        const authTag = authMatch && !tagInfo.obsConTag.includes('<!--usr_auth:') ? ` ${authMatch[0]}` : '';
+
         await this.supabase
           .from('trabajadores')
           .update({
             nombre: trabajadorActualizado.nombre,
             alias: trabajadorActualizado.alias,
-            telefono: tagInfo.obsConTag
+            telefono: tagInfo.obsConTag + authTag
           })
           .eq('id', id);
       } catch (e) {

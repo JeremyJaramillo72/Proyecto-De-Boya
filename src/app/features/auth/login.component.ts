@@ -49,13 +49,13 @@ export class LoginComponent {
     this.mensajeExito.set('');
   }
 
-  onSubmit(): void {
+  async onSubmit(): Promise<void> {
     this.mensajeError.set('');
     this.mensajeExito.set('');
     this.cargando.set(true);
 
-    setTimeout(() => {
-      const res = this.authService.login(this.usuario, this.password);
+    try {
+      const res = await this.authService.login(this.usuario, this.password);
       this.cargando.set(false);
 
       if (res.exito) {
@@ -64,10 +64,13 @@ export class LoginComponent {
       } else {
         this.mensajeError.set(res.mensaje);
       }
-    }, 200);
+    } catch (err: any) {
+      this.cargando.set(false);
+      this.mensajeError.set('Error al intentar iniciar sesión. Por favor intenta de nuevo.');
+    }
   }
 
-  onRegistro(): void {
+  async onRegistro(): Promise<void> {
     this.mensajeError.set('');
     this.mensajeExito.set('');
 
@@ -99,8 +102,8 @@ export class LoginComponent {
 
     this.cargando.set(true);
 
-    setTimeout(() => {
-      const res = this.authService.registrarPublico({
+    try {
+      const res = await this.authService.registrarPublico({
         nombre: n,
         usuario: u,
         password: p
@@ -115,6 +118,9 @@ export class LoginComponent {
       } else {
         this.mensajeError.set(res.mensaje);
       }
-    }, 250);
+    } catch (err: any) {
+      this.cargando.set(false);
+      this.mensajeError.set('Error al procesar el registro. Intenta de nuevo.');
+    }
   }
 }
