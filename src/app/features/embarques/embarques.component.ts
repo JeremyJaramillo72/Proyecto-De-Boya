@@ -210,7 +210,13 @@ export class EmbarquesComponent {
     this.mostrarFormulario.set(true);
   }
 
+  puedeModificar(e: EmbarqueTrailer): boolean {
+    if (this.authService.esAdmin()) return true;
+    return this.dataService.esMiRegistro(e);
+  }
+
   iniciarEdicion(e: EmbarqueTrailer) {
+    if (!this.puedeModificar(e)) return;
     this.modoEdicion.set(true);
     this.idEnEdicion.set(e.id);
     this.fecha = e.fecha;
@@ -277,6 +283,7 @@ export class EmbarquesComponent {
   }
 
   abrirModalEliminar(e: EmbarqueTrailer) {
+    if (!this.puedeModificar(e)) return;
     this.itemAEliminar.set(e);
     this.modalEliminarAbierto.set(true);
   }
@@ -289,6 +296,7 @@ export class EmbarquesComponent {
   async ejecutarEliminar() {
     const e = this.itemAEliminar();
     if (e) {
+      if (!this.puedeModificar(e)) return;
       await this.dataService.eliminarEmbarque(e.id);
       this.cerrarModalEliminar();
       this.mostrarNotificacion('Embarque de tráiler eliminado');

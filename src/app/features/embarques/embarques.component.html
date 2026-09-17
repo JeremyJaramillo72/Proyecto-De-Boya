@@ -465,7 +465,7 @@
               </div>
 
               <!-- Botones de Acción CRUD -->
-              @if (authService.esAdmin()) {
+              @if (puedeModificar(e)) {
                 <div class="flex items-center gap-1.5 sm:border-l sm:border-slate-200 sm:pl-3">
                   <button (click)="iniciarEdicion(e)" title="Editar este embarque"
                     class="p-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 text-xs font-semibold transition-colors apple-btn-active cursor-pointer">

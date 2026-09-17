@@ -198,7 +198,13 @@ export class DescargasComponent {
     this.mostrarFormulario.set(true);
   }
 
+  puedeModificar(d: DescargaMadera): boolean {
+    if (this.authService.esAdmin()) return true;
+    return this.dataService.esMiRegistro(d);
+  }
+
   iniciarEdicion(d: DescargaMadera) {
+    if (!this.puedeModificar(d)) return;
     this.modoEdicion.set(true);
     this.idEnEdicion.set(d.id);
     this.fecha = d.fecha;
@@ -268,6 +274,7 @@ export class DescargasComponent {
   }
 
   abrirModalEliminar(d: DescargaMadera) {
+    if (!this.puedeModificar(d)) return;
     this.itemAEliminar.set(d);
     this.modalEliminarAbierto.set(true);
   }
@@ -280,6 +287,7 @@ export class DescargasComponent {
   async ejecutarEliminar() {
     const d = this.itemAEliminar();
     if (d) {
+      if (!this.puedeModificar(d)) return;
       await this.dataService.eliminarDescarga(d.id);
       this.cerrarModalEliminar();
       this.mostrarNotificacion('Bajada de madera eliminada');
