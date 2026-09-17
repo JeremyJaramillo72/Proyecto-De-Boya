@@ -1,0 +1,407 @@
+<div class="w-full space-y-6">
+  
+  <!-- Notificación Toast Flotante -->
+  @if (mensajeExito()) {
+    <div class="fixed top-5 right-5 z-50 flex items-center gap-2.5 px-4 py-3 bg-slate-900 text-white rounded-2xl shadow-2xl border border-slate-700 text-xs font-bold no-print animate-fade-in">
+      <svg class="w-4 h-4 text-emerald-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+      <span>{{ mensajeExito() }}</span>
+    </div>
+  }
+
+  <!-- 1. ENCABEZADO -->
+  <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+    <div>
+      <div class="flex items-center gap-2">
+        <span class="w-2 h-2 rounded-full bg-slate-800"></span>
+        <span class="text-[10px] font-bold uppercase tracking-wider text-slate-500">SEGURIDAD & CONTROL DE ACCESOS</span>
+      </div>
+      <h1 class="text-xl sm:text-2xl font-black text-slate-900 tracking-tight mt-0.5">
+        Gestión de Usuarios y Roles
+      </h1>
+      <p class="text-xs sm:text-sm text-slate-500 mt-0.5 font-medium">
+        Crea y administra las cuentas autorizadas para operar en BoyaControl.
+      </p>
+    </div>
+
+    <!-- Botón Crear Nuevo Usuario -->
+    <button (click)="abrirModalCrear()"
+      class="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-[#0f172a] hover:bg-slate-900 text-white font-semibold text-xs sm:text-sm transition-all shadow-xs apple-btn-active shrink-0 min-h-[40px] cursor-pointer">
+      <svg class="w-4 h-4 text-slate-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      <span>Nuevo Usuario</span>
+    </button>
+  </div>
+
+  <!-- 2. SECCIÓN: MIS CREDENCIALES (ADMIN JEREMY) -->
+  <div class="bg-gradient-to-br from-slate-900 via-slate-900 to-slate-800 rounded-3xl p-5 sm:p-7 text-white shadow-lg space-y-4 border border-slate-800">
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800 pb-4">
+      <div class="flex items-center gap-3">
+        <div class="w-11 h-11 rounded-2xl bg-white/10 flex items-center justify-center text-white border border-white/10 shrink-0">
+          <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+        </div>
+        <div>
+          <div class="flex items-center gap-2">
+            <h2 class="text-base sm:text-lg font-bold tracking-tight text-white">
+              Mis Credenciales de Administrador
+            </h2>
+            <span class="px-2 py-0.5 rounded-md text-[10px] font-bold bg-amber-400/20 text-amber-300 border border-amber-400/30 uppercase tracking-wider">
+              ADMIN PRINCIPAL
+            </span>
+          </div>
+          <p class="text-xs text-slate-400 font-medium mt-0.5">
+            Actualiza tu nombre visible, usuario de inicio de sesión o contraseña de acceso.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Formulario Rápido de Mis Credenciales -->
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-1">
+      <div>
+        <label class="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1.5">
+          Mi Nombre Visible
+        </label>
+        <input type="text" [(ngModel)]="miNombre" placeholder="Tu nombre"
+          class="w-full bg-white/10 border border-white/10 rounded-xl px-3.5 py-2 text-white text-xs sm:text-sm font-semibold focus:bg-white/20 focus:outline-none min-h-[42px] placeholder:text-slate-500" />
+      </div>
+
+      <div>
+        <label class="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1.5">
+          Mi Usuario (Login)
+        </label>
+        <input type="text" [(ngModel)]="miUsuario" placeholder="Usuario para entrar"
+          class="w-full bg-white/10 border border-white/10 rounded-xl px-3.5 py-2 text-white text-xs sm:text-sm font-semibold focus:bg-white/20 focus:outline-none min-h-[42px] placeholder:text-slate-500" />
+      </div>
+
+      <div>
+        <label class="block text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1.5">
+          Nueva Contraseña (opcional)
+        </label>
+        <input type="password" [(ngModel)]="miNuevaClave" placeholder="Dejar en blanco para mantener la actual"
+          class="w-full bg-white/10 border border-white/10 rounded-xl px-3.5 py-2 text-white text-xs sm:text-sm font-semibold focus:bg-white/20 focus:outline-none min-h-[42px] placeholder:text-slate-500" />
+      </div>
+    </div>
+
+    <div class="flex items-center justify-between pt-2">
+      <span class="text-xs text-slate-400 font-medium">
+        Sesión activa: <strong class="text-white font-mono">&#64;{{ authService.usuarioActual()?.usuario }}</strong>
+      </span>
+      <button (click)="guardarMisCredenciales()"
+        class="px-4 py-2 rounded-xl bg-white text-slate-950 hover:bg-slate-100 font-bold text-xs transition-all shadow-sm apple-btn-active cursor-pointer">
+        Guardar Mis Cambios
+      </button>
+    </div>
+  </div>
+
+  <!-- 3. LISTADO DE USUARIOS REGISTRADOS -->
+  <div class="bg-white rounded-2xl border border-slate-200/80 shadow-[0_1px_3px_rgba(0,0,0,0.02)] p-5 sm:p-7 space-y-4">
+    <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+      <div>
+        <h2 class="text-base font-bold text-slate-900 tracking-tight">
+          Usuarios del Sistema ({{ authService.usuarios().length }})
+        </h2>
+        <p class="text-xs text-slate-500 font-medium mt-0.5">
+          Cuentas autorizadas para ingresar a la plataforma BoyaControl.
+        </p>
+      </div>
+
+      <!-- Leyenda de Roles -->
+      <div class="hidden md:flex items-center gap-2 text-xs">
+        <span class="inline-flex items-center gap-1 text-purple-800 font-semibold bg-purple-50 px-2.5 py-1 rounded-lg border border-purple-200/80 text-[11px]">
+          <svg class="w-3 h-3 text-purple-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+          Admin: Acceso Total
+        </span>
+        <span class="inline-flex items-center gap-1 text-slate-700 font-semibold bg-slate-100 px-2.5 py-1 rounded-lg border border-slate-200/80 text-[11px]">
+          <svg class="w-3 h-3 text-slate-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="5"/><path d="M20 21a8 8 0 1 0-16 0"/></svg>
+          Usuario: Operativo
+        </span>
+      </div>
+    </div>
+
+    <!-- Grid de Tarjetas de Usuarios -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      @for (u of authService.usuarios(); track u.id) {
+        <div class="p-4 rounded-2xl border transition-all space-y-3 bg-white"
+          [ngClass]="u.activo ? 'border-slate-200/90 hover:border-slate-300 shadow-xs' : 'border-slate-200 bg-slate-50/50 opacity-60'">
+          
+          <!-- Encabezado de Usuario -->
+          <div class="flex items-start justify-between gap-2">
+            <div class="flex items-center gap-3">
+              <div class="w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold shrink-0 text-white shadow-xs"
+                [ngClass]="u.rol === 'ADMIN' ? 'bg-slate-900' : 'bg-slate-600'">
+                {{ u.nombre.charAt(0).toUpperCase() }}
+              </div>
+              <div>
+                <div class="flex items-center gap-1.5">
+                  <h3 class="text-sm font-bold text-slate-900">{{ u.nombre }}</h3>
+                  @if (u.id === authService.usuarioActual()?.id) {
+                    <span class="text-[9px] font-bold uppercase px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-800">
+                      TÚ
+                    </span>
+                  }
+                </div>
+                <span class="text-xs text-slate-400 font-mono">&#64;{{ u.usuario }}</span>
+              </div>
+            </div>
+
+            <!-- Rol Badge -->
+            <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider"
+              [ngClass]="u.rol === 'ADMIN' ? 'bg-purple-50 text-purple-800 border border-purple-200' : 'bg-slate-100 text-slate-700 border border-slate-200'">
+              {{ u.rol === 'ADMIN' ? 'Administrador' : 'Usuario' }}
+            </span>
+          </div>
+
+          <!-- Información de Estado y Fechas -->
+          <div class="space-y-1 text-xs pt-2 border-t border-slate-100">
+            <div class="flex items-center justify-between text-slate-500">
+              <span class="font-medium">Estado:</span>
+              <span class="font-semibold inline-flex items-center gap-1.5"
+                [ngClass]="u.activo ? 'text-emerald-700' : 'text-slate-400'">
+                <span class="w-1.5 h-1.5 rounded-full" [ngClass]="u.activo ? 'bg-emerald-500' : 'bg-slate-300'"></span>
+                {{ u.activo ? 'Activo' : 'Desactivado' }}
+              </span>
+            </div>
+            <div class="flex items-center justify-between text-[11px] text-slate-400">
+              <span>Último acceso:</span>
+              <span class="font-mono text-slate-600">{{ u.ultimo_acceso || 'Sin registrar' }}</span>
+            </div>
+          </div>
+
+          <!-- Botones de Acción -->
+          <div class="flex items-center justify-between gap-1.5 pt-2 border-t border-slate-100">
+            <div class="flex items-center gap-1">
+              <!-- Cambiar Contraseña -->
+              <button (click)="abrirModalPassword(u)" title="Cambiar contraseña de este usuario"
+                class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-[11px] font-semibold transition-all apple-btn-active cursor-pointer">
+                <svg class="w-3.5 h-3.5 text-slate-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="7.5" cy="15.5" r="5.5"/><path d="m21 2-9.6 9.6"/><path d="m15.5 7.5 3 3L22 7l-3-3"/></svg>
+                <span>Clave</span>
+              </button>
+
+              <!-- Editar -->
+              <button (click)="abrirModalEditar(u)" title="Editar datos y rol"
+                class="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 text-[11px] font-semibold transition-all apple-btn-active cursor-pointer">
+                <svg class="w-3.5 h-3.5 text-slate-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg>
+                <span>Editar</span>
+              </button>
+            </div>
+
+            <div class="flex items-center gap-1">
+              <!-- Alternar Activo/Inactivo (solo si no es uno mismo) -->
+              @if (u.id !== authService.usuarioActual()?.id) {
+                <button (click)="alternarActivo(u)"
+                  [title]="u.activo ? 'Desactivar acceso' : 'Reactivar acceso'"
+                  class="px-2.5 py-1 rounded-lg text-[11px] font-semibold border transition-all apple-btn-active cursor-pointer"
+                  [ngClass]="u.activo ? 'bg-amber-50 hover:bg-amber-100 text-amber-800 border-amber-200' : 'bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border-emerald-200'">
+                  {{ u.activo ? 'Desactivar' : 'Activar' }}
+                </button>
+
+                <button (click)="eliminarUsuario(u)" title="Eliminar usuario definitivamente"
+                  class="p-1.5 rounded-lg bg-slate-100 hover:bg-red-50 hover:text-red-700 text-slate-500 text-xs transition-colors apple-btn-active cursor-pointer">
+                  <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/></svg>
+                </button>
+              }
+            </div>
+          </div>
+
+        </div>
+      }
+    </div>
+  </div>
+
+  <!-- ======================================================= -->
+  <!-- MODAL: CREAR NUEVO USUARIO                              -->
+  <!-- ======================================================= -->
+  @if (modalCrearAbierto()) {
+    <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in">
+      <div class="bg-white rounded-3xl border border-slate-200/90 shadow-2xl max-w-md w-full p-6 sm:p-7 space-y-5 animate-scale-in">
+        
+        <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+          <div class="flex items-center gap-2.5">
+            <div class="w-8 h-8 rounded-xl bg-slate-100 flex items-center justify-center text-slate-700">
+              <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="5"/><path d="M20 21a8 8 0 1 0-16 0"/></svg>
+            </div>
+            <div>
+              <h2 class="text-base font-bold text-slate-900">Crear Nuevo Usuario</h2>
+              <p class="text-xs text-slate-500">Asigna credenciales y nivel de acceso.</p>
+            </div>
+          </div>
+          <button (click)="cerrarModalCrear()" class="w-8 h-8 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold flex items-center justify-center text-xs cursor-pointer">
+            ✕
+          </button>
+        </div>
+
+        @if (mensajeError()) {
+          <div class="p-3 rounded-xl bg-red-50 border border-red-200 text-red-700 text-xs font-semibold flex items-center gap-1.5">
+            <svg class="w-4 h-4 text-red-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+            <span>{{ mensajeError() }}</span>
+          </div>
+        }
+
+        <div class="space-y-3.5 text-xs">
+          <!-- Nombre Completo -->
+          <div>
+            <label class="block text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-1">
+              Nombre de la Persona *
+            </label>
+            <input type="text" [(ngModel)]="nuevoUsuario.nombre" placeholder="Ej: Carlos Pérez"
+              class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-slate-900 font-semibold focus:bg-white focus:outline-none min-h-[40px]" />
+          </div>
+
+          <!-- Usuario Login -->
+          <div>
+            <label class="block text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-1">
+              Nombre de Usuario (Login) *
+            </label>
+            <input type="text" [(ngModel)]="nuevoUsuario.usuario" placeholder="Ej: carlosp"
+              class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-slate-900 font-semibold focus:bg-white focus:outline-none min-h-[40px]" />
+            <span class="text-[10px] text-slate-400 mt-0.5 block">Con este nombre iniciará sesión.</span>
+          </div>
+
+          <!-- Contraseña -->
+          <div>
+            <label class="block text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-1">
+              Contraseña Inicial *
+            </label>
+            <input type="text" [(ngModel)]="nuevoUsuario.password" placeholder="Ej: 12345"
+              class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-slate-900 font-semibold focus:bg-white focus:outline-none min-h-[40px]" />
+          </div>
+
+          <!-- Selección de Rol -->
+          <div>
+            <label class="block text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-1.5">
+              Rol en el Sistema *
+            </label>
+            <div class="grid grid-cols-2 gap-2">
+              <button type="button" (click)="nuevoUsuario.rol = 'USUARIO'"
+                class="p-2.5 rounded-xl border text-left transition-all apple-btn-active flex flex-col gap-0.5 cursor-pointer"
+                [ngClass]="nuevoUsuario.rol === 'USUARIO' ? 'bg-slate-100 border-slate-400 ring-2 ring-slate-950/10 text-slate-900 font-bold' : 'bg-slate-50 border-slate-200 text-slate-600'">
+                <span class="text-xs font-bold">Rol Operativo (Usuario)</span>
+                <span class="text-[10px] opacity-75">Nómina y faenas propias</span>
+              </button>
+
+              <button type="button" (click)="nuevoUsuario.rol = 'ADMIN'"
+                class="p-2.5 rounded-xl border text-left transition-all apple-btn-active flex flex-col gap-0.5 cursor-pointer"
+                [ngClass]="nuevoUsuario.rol === 'ADMIN' ? 'bg-purple-50 border-purple-300 ring-2 ring-purple-500/20 text-purple-900 font-bold' : 'bg-slate-50 border-slate-200 text-slate-600'">
+                <span class="text-xs font-bold">Administrador</span>
+                <span class="text-[10px] opacity-75">Acceso total + crear usuarios</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div class="flex items-center justify-end gap-2 pt-3 border-t border-slate-100">
+          <button (click)="cerrarModalCrear()" class="px-3.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-xs cursor-pointer">
+            Cancelar
+          </button>
+          <button (click)="guardarNuevoUsuario()" class="px-4 py-2 rounded-xl bg-[#0f172a] hover:bg-slate-900 text-white font-bold text-xs shadow-xs apple-btn-active cursor-pointer">
+            Crear Usuario
+          </button>
+        </div>
+
+      </div>
+    </div>
+  }
+
+  <!-- ======================================================= -->
+  <!-- MODAL: CAMBIAR CONTRASEÑA DE UN USUARIO                 -->
+  <!-- ======================================================= -->
+  @if (modalPasswordAbierto()) {
+    <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in">
+      <div class="bg-white rounded-3xl border border-slate-200/90 shadow-2xl max-w-sm w-full p-6 space-y-4 animate-scale-in">
+        
+        <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+          <div class="flex items-center gap-2">
+            <div class="w-7 h-7 rounded-lg bg-slate-100 flex items-center justify-center text-slate-700">
+              <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="7.5" cy="15.5" r="5.5"/><path d="m21 2-9.6 9.6"/><path d="m15.5 7.5 3 3L22 7l-3-3"/></svg>
+            </div>
+            <h2 class="text-sm font-bold text-slate-900">
+              Nueva Clave: {{ usuarioEnEdicion()?.nombre }}
+            </h2>
+          </div>
+          <button (click)="cerrarModalPassword()" class="w-8 h-8 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold text-xs flex items-center justify-center cursor-pointer">
+            ✕
+          </button>
+        </div>
+
+        @if (mensajeError()) {
+          <div class="p-2.5 rounded-xl bg-red-50 border border-red-200 text-red-700 text-xs font-semibold">
+            {{ mensajeError() }}
+          </div>
+        }
+
+        <div class="space-y-2 text-xs">
+          <label class="block text-[10px] font-bold uppercase tracking-wider text-slate-500">
+            Escribe la nueva contraseña
+          </label>
+          <input type="text" [(ngModel)]="nuevaClave" placeholder="Ingresa la nueva clave..."
+            class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-slate-900 font-semibold focus:bg-white focus:outline-none min-h-[40px]" />
+        </div>
+
+        <div class="flex items-center justify-end gap-2 pt-2 border-t border-slate-100">
+          <button (click)="cerrarModalPassword()" class="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-xs cursor-pointer">
+            Cancelar
+          </button>
+          <button (click)="guardarNuevaPassword()" class="px-3.5 py-1.5 rounded-xl bg-[#0f172a] hover:bg-slate-900 text-white font-bold text-xs shadow-xs apple-btn-active cursor-pointer">
+            Guardar Clave
+          </button>
+        </div>
+
+      </div>
+    </div>
+  }
+
+  <!-- ======================================================= -->
+  <!-- MODAL: EDITAR DATOS Y ROL DEL USUARIO                   -->
+  <!-- ======================================================= -->
+  @if (modalEditarAbierto()) {
+    <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-fade-in">
+      <div class="bg-white rounded-3xl border border-slate-200/90 shadow-2xl max-w-md w-full p-6 space-y-4 animate-scale-in">
+        
+        <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+          <div class="flex items-center gap-2">
+            <div class="w-7 h-7 rounded-lg bg-slate-100 flex items-center justify-center text-slate-700">
+              <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg>
+            </div>
+            <h2 class="text-sm font-bold text-slate-900">Editar Usuario</h2>
+          </div>
+          <button (click)="cerrarModalEditar()" class="w-8 h-8 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold text-xs flex items-center justify-center cursor-pointer">
+            ✕
+          </button>
+        </div>
+
+        <div class="space-y-3 text-xs">
+          <div>
+            <label class="block text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-1">Nombre</label>
+            <input type="text" [(ngModel)]="editNombre"
+              class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-slate-900 font-semibold focus:bg-white focus:outline-none min-h-[40px]" />
+          </div>
+
+          <div>
+            <label class="block text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-1">Usuario (Login)</label>
+            <input type="text" [(ngModel)]="editUsuario"
+              class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-slate-900 font-semibold focus:bg-white focus:outline-none min-h-[40px]" />
+          </div>
+
+          <div>
+            <label class="block text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-1">Rol</label>
+            <select [(ngModel)]="editRol"
+              class="w-full bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-slate-900 font-semibold focus:bg-white focus:outline-none min-h-[40px]">
+              <option value="USUARIO">Rol Operativo (Usuario)</option>
+              <option value="ADMIN">Rol Administrador (Acceso total)</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="flex items-center justify-end gap-2 pt-2 border-t border-slate-100">
+          <button (click)="cerrarModalEditar()" class="px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-xs cursor-pointer">
+            Cancelar
+          </button>
+          <button (click)="guardarEdicion()" class="px-3.5 py-1.5 rounded-xl bg-[#0f172a] hover:bg-slate-900 text-white font-bold text-xs shadow-xs apple-btn-active cursor-pointer">
+            Guardar Cambios
+          </button>
+        </div>
+
+      </div>
+    </div>
+  }
+
+</div>

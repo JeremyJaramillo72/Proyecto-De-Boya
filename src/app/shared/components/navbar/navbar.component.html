@@ -1,0 +1,98 @@
+<header class="sticky top-0 z-40 apple-glass border-b border-black/[0.08] shadow-[0_1px_2px_rgba(0,0,0,0.02)] no-print">
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="flex items-center justify-between h-16">
+      
+      <!-- Logo & Brand (Apple style) -->
+      <div class="flex items-center gap-3">
+        <a routerLink="/" class="flex items-center gap-2.5 group apple-btn-active">
+          <div class="w-9 h-9 rounded-2xl bg-[#1d1d1f] flex items-center justify-center text-white text-base shadow-sm group-hover:scale-105 transition-transform">
+            🪵
+          </div>
+          <div>
+            <span class="text-base font-bold tracking-tight text-[#1d1d1f] flex items-center gap-1">
+              Boya<span class="text-[#0071e3]">Control</span>
+            </span>
+            <p class="text-[10px] text-slate-400 uppercase tracking-wider font-semibold -mt-1">
+              Madera & Tráilers
+            </p>
+          </div>
+        </a>
+      </div>
+
+      <!-- Apple Segmented Navigation (Desktop) -->
+      <nav class="hidden md:flex items-center bg-[#e5e5ea]/80 p-1 rounded-full border border-black/[0.04]">
+        <a routerLink="/dashboard" routerLinkActive="bg-white text-[#1d1d1f] shadow-[0_2px_5px_rgba(0,0,0,0.08)] font-semibold"
+          class="px-4 py-1.5 rounded-full text-xs text-slate-600 hover:text-[#1d1d1f] transition-all font-medium flex items-center gap-1.5 apple-btn-active">
+          <span>📊</span>
+          Dashboard
+        </a>
+
+        <a routerLink="/descargas" routerLinkActive="bg-white text-[#1d1d1f] shadow-[0_2px_5px_rgba(0,0,0,0.08)] font-semibold"
+          class="px-4 py-1.5 rounded-full text-xs text-slate-600 hover:text-[#1d1d1f] transition-all font-medium flex items-center gap-1.5 apple-btn-active">
+          <span>🪵</span>
+          Descargas
+        </a>
+
+        <a routerLink="/embarques" routerLinkActive="bg-white text-[#1d1d1f] shadow-[0_2px_5px_rgba(0,0,0,0.08)] font-semibold"
+          class="px-4 py-1.5 rounded-full text-xs text-slate-600 hover:text-[#1d1d1f] transition-all font-medium flex items-center gap-1.5 apple-btn-active">
+          <span>🚛</span>
+          Tráilers
+        </a>
+
+        <a routerLink="/reportes" routerLinkActive="bg-white text-[#1d1d1f] shadow-[0_2px_5px_rgba(0,0,0,0.08)] font-semibold"
+          class="px-4 py-1.5 rounded-full text-xs text-slate-600 hover:text-[#1d1d1f] transition-all font-medium flex items-center gap-1.5 apple-btn-active">
+          <span>📈</span>
+          Reportes
+        </a>
+
+        <a routerLink="/trabajadores" routerLinkActive="bg-white text-[#1d1d1f] shadow-[0_2px_5px_rgba(0,0,0,0.08)] font-semibold"
+          class="px-4 py-1.5 rounded-full text-xs text-slate-600 hover:text-[#1d1d1f] transition-all font-medium flex items-center gap-1.5 apple-btn-active">
+          <span>👥</span>
+          Personal
+        </a>
+      </nav>
+
+      <!-- Status & Balance -->
+      <div class="flex items-center gap-3">
+        <div class="hidden sm:flex flex-col items-end">
+          <span class="text-[10px] text-slate-500 uppercase font-semibold tracking-wider">Por Liquidar</span>
+          <span class="text-sm font-bold text-[#1d1d1f]">
+            \${{ dataService.totalPendienteCobro() | number:'1.2-2' }}
+          </span>
+        </div>
+
+        <div class="px-2.5 py-1 rounded-full text-[11px] font-semibold flex items-center gap-1.5 border"
+          [ngClass]="dataService.isUsingSupabase() ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-slate-100 text-slate-600 border-slate-200'">
+          <span class="w-1.5 h-1.5 rounded-full animate-pulse"
+            [ngClass]="dataService.isUsingSupabase() ? 'bg-emerald-500' : 'bg-blue-500'"></span>
+          {{ dataService.isUsingSupabase() ? 'Supabase' : 'Modo Local' }}
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Mobile Tab Bar (iOS Floating style) -->
+  <div class="md:hidden border-t border-black/[0.06] bg-white/95 px-2 py-2 flex items-center justify-around text-[11px]">
+    <a routerLink="/dashboard" routerLinkActive="text-[#0071e3] font-bold" class="flex flex-col items-center py-1 text-slate-500">
+      <span class="text-base">📊</span>
+      <span>Inicio</span>
+    </a>
+    <a routerLink="/descargas" routerLinkActive="text-[#0071e3] font-bold" class="flex flex-col items-center py-1 text-slate-500">
+      <span class="text-base">🪵</span>
+      <span>Madera</span>
+    </a>
+    <a routerLink="/embarques" routerLinkActive="text-[#0071e3] font-bold" class="flex flex-col items-center py-1 text-slate-500">
+      <span class="text-base">🚛</span>
+      <span>Tráilers</span>
+    </a>
+    <a routerLink="/reportes" routerLinkActive="text-[#0071e3] font-bold" class="flex flex-col items-center py-1 text-slate-500">
+      <span class="text-base">📈</span>
+      <span>Reportes</span>
+    </a>
+    <a routerLink="/trabajadores" routerLinkActive="text-[#0071e3] font-bold" class="flex flex-col items-center py-1 text-slate-500">
+      <span class="text-base">👥</span>
+      <span>Personal</span>
+    </a>
+  </div>
+</header>

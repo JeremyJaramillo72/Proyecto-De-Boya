@@ -1,0 +1,5 @@
+/* Embarques Component Styles */
+:host {
+  display: block;
+  width: 100%;
+}

@@ -1,0 +1,169 @@
+<!-- SIDEBAR EMPRESARIAL -->
+<aside class="hidden md:flex flex-col w-64 bg-white border-r border-slate-200/80 min-h-[calc(100vh-4rem)] shrink-0 select-none no-print justify-between transition-all">
+  
+  <div class="p-4 space-y-6">
+    
+    <!-- Header del Sidebar -->
+    <div class="px-2 pt-1 border-b border-slate-100 pb-3">
+      <p class="text-[10px] uppercase font-bold tracking-wider text-slate-400">PANEL DE CONTROL</p>
+      <h2 class="text-sm font-bold text-slate-900 tracking-tight">Gestión del Negocio</h2>
+    </div>
+
+    <!-- 1. GENERAL -->
+    <div class="space-y-1">
+      <p class="px-2 text-[10px] uppercase font-bold text-slate-400 tracking-wider">RESUMEN</p>
+
+      <a routerLink="/dashboard" routerLinkActive="bg-slate-900 text-white shadow-xs font-semibold"
+        class="w-full px-3 py-2.5 rounded-xl text-xs text-slate-600 hover:text-slate-900 hover:bg-slate-100/80 font-medium transition-all flex items-center justify-between group">
+        <div class="flex items-center gap-2.5">
+          <svg class="w-4 h-4 opacity-75 group-hover:opacity-100" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
+          </svg>
+          <span>Dashboard Ejecutivo</span>
+        </div>
+        <span class="px-1.5 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider bg-emerald-50 text-emerald-700 border border-emerald-200/60">
+          En vivo
+        </span>
+      </a>
+    </div>
+
+    <!-- 2. RECEPCIÓN & PATIO -->
+    <div class="space-y-1">
+      <p class="px-2 text-[10px] uppercase font-bold text-slate-400 tracking-wider">OPERACIONES DE PATIO</p>
+
+      <a routerLink="/descargas" routerLinkActive="bg-slate-900 text-white shadow-xs font-semibold"
+        class="w-full px-3 py-2.5 rounded-xl text-xs text-slate-600 hover:text-slate-900 hover:bg-slate-100/80 font-medium transition-all flex items-center justify-between group">
+        <div class="flex items-center gap-2.5">
+          <svg class="w-4 h-4 opacity-75 group-hover:opacity-100" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
+          </svg>
+          <span>Bajada de Madera</span>
+        </div>
+        <span class="px-2 py-0.5 rounded-md text-[10px] font-mono font-bold bg-slate-100 text-slate-600">
+          {{ descargasCount() }}
+        </span>
+      </a>
+
+      <a routerLink="/embarques" routerLinkActive="bg-slate-900 text-white shadow-xs font-semibold"
+        class="w-full px-3 py-2.5 rounded-xl text-xs text-slate-600 hover:text-slate-900 hover:bg-slate-100/80 font-medium transition-all flex items-center justify-between group">
+        <div class="flex items-center gap-2.5">
+          <svg class="w-4 h-4 opacity-75 group-hover:opacity-100" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17a2 2 0 11-4 0 2 2 0 014 0zM19 17a2 2 0 11-4 0 2 2 0 014 0z"/>
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h1m8-1a1 1 0 01-1 1H9m4-1V8a1 1 0 011-1h2.586a1 1 0 01.707.293l3.414 3.414a1 1 0 01.293.707V16a1 1 0 01-1 1h-1m-6-1a1 1 0 001 1h1M5 17a2 2 0 104 0m-4 0a2 2 0 114 0m6 0a2 2 0 104 0m-4 0a2 2 0 114 0"/>
+          </svg>
+          <span>Embarque Tráilers</span>
+        </div>
+        <span class="px-2 py-0.5 rounded-md text-[10px] font-mono font-bold bg-slate-100 text-slate-600">
+          {{ trailersCount() }}
+        </span>
+      </a>
+    </div>
+
+    <!-- 3. NÓMINA & LIQUIDACIÓN -->
+    <div class="space-y-1">
+      <p class="px-2 text-[10px] uppercase font-bold text-slate-400 tracking-wider">NÓMINA & AUDITORÍA</p>
+
+      <a routerLink="/reportes" routerLinkActive="bg-slate-900 text-white shadow-xs font-semibold"
+        class="w-full px-3 py-2.5 rounded-xl text-xs text-slate-600 hover:text-slate-900 hover:bg-slate-100/80 font-medium transition-all flex items-center justify-between group">
+        <div class="flex items-center gap-2.5">
+          <svg class="w-4 h-4 opacity-75 group-hover:opacity-100" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+          </svg>
+          <span>Auditoría & Pagos</span>
+        </div>
+        <span class="px-2 py-0.5 rounded-md text-[10px] font-mono font-bold bg-slate-100 text-slate-600">
+          {{ auditoriaCount() }}
+        </span>
+      </a>
+    </div>
+
+    <!-- 4. CLIENTES & PERSONAL -->
+    <div class="space-y-1">
+      <p class="px-2 text-[10px] uppercase font-bold text-slate-400 tracking-wider">EQUIPO & PERSONAL</p>
+
+      <a routerLink="/trabajadores" routerLinkActive="bg-slate-900 text-white shadow-xs font-semibold"
+        class="w-full px-3 py-2.5 rounded-xl text-xs text-slate-600 hover:text-slate-900 hover:bg-slate-100/80 font-medium transition-all flex items-center justify-between group">
+        <div class="flex items-center gap-2.5">
+          <svg class="w-4 h-4 opacity-75 group-hover:opacity-100" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/>
+          </svg>
+          <span>Personal / Cuadrilla</span>
+        </div>
+        <span class="px-2 py-0.5 rounded-md text-[10px] font-mono font-bold bg-slate-100 text-slate-600">
+          {{ personalCount() }}
+        </span>
+      </a>
+    </div>
+
+    <!-- 5. SEGURIDAD & ACCESOS (Solo visible para Administrador) -->
+    @if (authService.esAdmin()) {
+      <div class="space-y-1 pt-2 border-t border-slate-100">
+        <p class="px-2 text-[10px] uppercase font-bold text-slate-400 tracking-wider">ADMINISTRACIÓN</p>
+
+        <a routerLink="/usuarios" routerLinkActive="bg-slate-900 text-white shadow-xs font-semibold"
+          class="w-full px-3 py-2.5 rounded-xl text-xs text-slate-600 hover:text-slate-900 hover:bg-slate-100/80 font-medium transition-all flex items-center justify-between group">
+          <div class="flex items-center gap-2.5">
+            <svg class="w-4 h-4 opacity-75 group-hover:opacity-100" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/>
+            </svg>
+            <span>Usuarios del Sistema</span>
+          </div>
+          <span class="px-2 py-0.5 rounded-md text-[10px] font-mono font-bold bg-slate-100 text-slate-600">
+            {{ authService.usuarios().length }}
+          </span>
+        </a>
+      </div>
+    }
+
+  </div>
+
+  <!-- Pie del Sidebar: Estado de Base de Datos -->
+  <div class="p-4 border-t border-slate-100 bg-slate-50/60">
+    <div class="flex items-center justify-between">
+      <div class="flex items-center gap-2">
+        <span class="w-2 h-2 rounded-full"
+          [ngClass]="dataService.isUsingSupabase() ? 'bg-emerald-500' : 'bg-slate-400'"></span>
+        <span class="text-[11px] font-medium text-slate-600">
+          {{ dataService.isUsingSupabase() ? 'Cloud Postgres' : 'Modo Local' }}
+        </span>
+      </div>
+      <span class="text-[10px] text-slate-400 font-mono font-semibold">v2.0 PRO</span>
+    </div>
+  </div>
+
+</aside>
+
+<!-- BARRA INFERIOR MÓVIL (Sleek Apple Bar) -->
+<nav class="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-md border-t border-slate-200 px-3 py-2 pb-safe flex items-center justify-around no-print shadow-[0_-2px_10px_rgba(0,0,0,0.03)]">
+  <a routerLink="/dashboard" routerLinkActive="text-slate-900 font-bold" class="flex flex-col items-center py-1 text-slate-500 text-xs">
+    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
+    </svg>
+    <span class="text-[10px] font-medium mt-0.5">Inicio</span>
+  </a>
+  <a routerLink="/descargas" routerLinkActive="text-slate-900 font-bold" class="flex flex-col items-center py-1 text-slate-500 text-xs">
+    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
+    </svg>
+    <span class="text-[10px] font-medium mt-0.5">Madera</span>
+  </a>
+  <a routerLink="/embarques" routerLinkActive="text-slate-900 font-bold" class="flex flex-col items-center py-1 text-slate-500 text-xs">
+    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17a2 2 0 11-4 0 2 2 0 014 0zM19 17a2 2 0 11-4 0 2 2 0 014 0z"/>
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h1m8-1a1 1 0 01-1 1H9m4-1V8a1 1 0 011-1h2.586a1 1 0 01.707.293l3.414 3.414a1 1 0 01.293.707V16a1 1 0 01-1 1h-1m-6-1a1 1 0 001 1h1M5 17a2 2 0 104 0m-4 0a2 2 0 114 0m6 0a2 2 0 104 0m-4 0a2 2 0 114 0"/>
+    </svg>
+    <span class="text-[10px] font-medium mt-0.5">Tráilers</span>
+  </a>
+  <a routerLink="/reportes" routerLinkActive="text-slate-900 font-bold" class="flex flex-col items-center py-1 text-slate-500 text-xs">
+    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+    </svg>
+    <span class="text-[10px] font-medium mt-0.5">Auditoría</span>
+  </a>
+  <a routerLink="/trabajadores" routerLinkActive="text-slate-900 font-bold" class="flex flex-col items-center py-1 text-slate-500 text-xs">
+    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/>
+    </svg>
+    <span class="text-[10px] font-medium mt-0.5">Personal</span>
+  </a>
+</nav>

@@ -1,0 +1,238 @@
+<div class="min-h-[calc(100vh-4rem)] flex items-center justify-center p-4 sm:p-6">
+  <div class="w-full max-w-md bg-white rounded-3xl border border-slate-200/90 shadow-xl p-6 sm:p-8 space-y-6 animate-scale-in">
+    
+    <!-- Encabezado con Logo BoyaControl -->
+    <div class="text-center space-y-2">
+      <div class="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-tr from-slate-950 via-slate-900 to-slate-800 text-white text-2xl shadow-md border border-slate-700/50 mb-1">
+        🪵
+      </div>
+      <div>
+        <h1 class="text-2xl font-black tracking-tight text-slate-900">BoyaControl</h1>
+        <p class="text-xs font-bold text-slate-400 uppercase tracking-widest mt-0.5">
+          Patio 01 • Sistema de Madera y Tráilers
+        </p>
+      </div>
+      <p class="text-xs text-slate-500 font-medium">
+        @if (modo() === 'login') {
+          Ingresa tus credenciales de acceso para comenzar a operar.
+        } @else {
+          Crea tu cuenta de usuario para registrar tus faenas y cobros.
+        }
+      </p>
+    </div>
+
+    <!-- Pestañas Segmentadas (Apple HIG Style) -->
+    <div class="grid grid-cols-2 p-1 bg-slate-100/90 rounded-2xl border border-slate-200/60 text-xs font-bold">
+      <button type="button" 
+        (click)="cambiarModo('login')"
+        [class.bg-white]="modo() === 'login'"
+        [class.text-slate-900]="modo() === 'login'"
+        [class.shadow-sm]="modo() === 'login'"
+        [class.text-slate-500]="modo() !== 'login'"
+        class="py-2.5 px-3 rounded-xl transition-all duration-200 flex items-center justify-center gap-1.5 cursor-pointer">
+        <span>🔑</span>
+        <span>Iniciar Sesión</span>
+      </button>
+      <button type="button" 
+        (click)="cambiarModo('registro')"
+        [class.bg-white]="modo() === 'registro'"
+        [class.text-slate-900]="modo() === 'registro'"
+        [class.shadow-sm]="modo() === 'registro'"
+        [class.text-slate-500]="modo() !== 'registro'"
+        class="py-2.5 px-3 rounded-xl transition-all duration-200 flex items-center justify-center gap-1.5 cursor-pointer">
+        <span>📝</span>
+        <span>Crear Cuenta</span>
+      </button>
+    </div>
+
+    <!-- Mensaje de Error (si hay) -->
+    @if (mensajeError()) {
+      <div class="p-3.5 rounded-2xl bg-red-50 border border-red-200 text-red-700 text-xs font-bold flex items-center gap-2 animate-fade-in">
+        <span class="text-base">⚠️</span>
+        <span>{{ mensajeError() }}</span>
+      </div>
+    }
+
+    <!-- Mensaje de Éxito (si hay) -->
+    @if (mensajeExito()) {
+      <div class="p-3.5 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-bold flex items-center gap-2 animate-fade-in">
+        <span class="text-base">✅</span>
+        <span>{{ mensajeExito() }}</span>
+      </div>
+    }
+
+    <!-- Modo: INICIAR SESIÓN -->
+    @if (modo() === 'login') {
+      <form (ngSubmit)="onSubmit()" class="space-y-4">
+        
+        <!-- Campo Usuario -->
+        <div class="space-y-1.5">
+          <label class="block text-[11px] font-black uppercase tracking-wider text-slate-600">
+            Usuario
+          </label>
+          <div class="relative">
+            <span class="absolute left-3.5 top-3 text-slate-400 text-sm">👤</span>
+            <input type="text"
+              [(ngModel)]="usuario"
+              name="usuario"
+              required
+              autocomplete="username"
+              placeholder="Ej: Carlos"
+              class="w-full pl-10 pr-3.5 py-2.5 bg-slate-50 border border-slate-200/90 rounded-xl text-xs sm:text-sm text-slate-900 font-bold focus:bg-white focus:outline-none min-h-[44px] transition-all" />
+          </div>
+        </div>
+
+        <!-- Campo Contraseña -->
+        <div class="space-y-1.5">
+          <div class="flex items-center justify-between">
+            <label class="block text-[11px] font-black uppercase tracking-wider text-slate-600">
+              Contraseña
+            </label>
+          </div>
+          <div class="relative">
+            <span class="absolute left-3.5 top-3 text-slate-400 text-sm">🔒</span>
+            <input [type]="mostrarPassword() ? 'text' : 'password'"
+              [(ngModel)]="password"
+              name="password"
+              required
+              autocomplete="current-password"
+              placeholder="Ingresa tu contraseña"
+              class="w-full pl-10 pr-11 py-2.5 bg-slate-50 border border-slate-200/90 rounded-xl text-xs sm:text-sm text-slate-900 font-bold focus:bg-white focus:outline-none min-h-[44px] transition-all" />
+            
+            <button type="button" (click)="mostrarPassword.set(!mostrarPassword())"
+              class="absolute right-3 top-2.5 text-slate-400 hover:text-slate-700 p-1 text-xs font-bold transition-colors">
+              {{ mostrarPassword() ? '🙈' : '👁️' }}
+            </button>
+          </div>
+        </div>
+
+        <!-- Botón Iniciar Sesión -->
+        <button type="submit" [disabled]="cargando()"
+          class="w-full py-3 px-4 rounded-xl bg-[#0f172a] hover:bg-black text-white text-xs sm:text-sm font-bold shadow-md transition-all apple-btn-active min-h-[46px] flex items-center justify-center gap-2 mt-2 cursor-pointer disabled:opacity-50">
+          @if (cargando()) {
+            <span class="inline-block w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
+            <span>Verificando...</span>
+          } @else {
+            <span>Iniciar Sesión</span>
+            <span>→</span>
+          }
+        </button>
+
+        <!-- Switch a Registro -->
+        <div class="text-center pt-1">
+          <button type="button" (click)="cambiarModo('registro')"
+            class="text-xs text-slate-500 hover:text-slate-800 font-bold underline cursor-pointer transition-colors">
+            ¿No tienes una cuenta aún? Regístrate aquí
+          </button>
+        </div>
+
+      </form>
+    }
+
+    <!-- Modo: CREAR CUENTA (REGISTRO) -->
+    @if (modo() === 'registro') {
+      <form (ngSubmit)="onRegistro()" class="space-y-4">
+        
+        <!-- Nombre Completo -->
+        <div class="space-y-1.5">
+          <label class="block text-[11px] font-black uppercase tracking-wider text-slate-600">
+            Nombre Completo
+          </label>
+          <div class="relative">
+            <span class="absolute left-3.5 top-3 text-slate-400 text-sm">🏷️</span>
+            <input type="text"
+              [(ngModel)]="regNombre"
+              name="regNombre"
+              required
+              placeholder="Ej: Carlos Silva"
+              class="w-full pl-10 pr-3.5 py-2.5 bg-slate-50 border border-slate-200/90 rounded-xl text-xs sm:text-sm text-slate-900 font-bold focus:bg-white focus:outline-none min-h-[44px] transition-all" />
+          </div>
+        </div>
+
+        <!-- Nombre de Usuario -->
+        <div class="space-y-1.5">
+          <label class="block text-[11px] font-black uppercase tracking-wider text-slate-600">
+            Nombre de Usuario (Para iniciar sesión)
+          </label>
+          <div class="relative">
+            <span class="absolute left-3.5 top-3 text-slate-400 text-sm">👤</span>
+            <input type="text"
+              [(ngModel)]="regUsuario"
+              name="regUsuario"
+              required
+              autocomplete="username"
+              placeholder="Ej: carloss"
+              class="w-full pl-10 pr-3.5 py-2.5 bg-slate-50 border border-slate-200/90 rounded-xl text-xs sm:text-sm text-slate-900 font-bold focus:bg-white focus:outline-none min-h-[44px] transition-all" />
+          </div>
+        </div>
+
+        <!-- Contraseña -->
+        <div class="space-y-1.5">
+          <label class="block text-[11px] font-black uppercase tracking-wider text-slate-600">
+            Contraseña
+          </label>
+          <div class="relative">
+            <span class="absolute left-3.5 top-3 text-slate-400 text-sm">🔒</span>
+            <input [type]="mostrarRegPassword() ? 'text' : 'password'"
+              [(ngModel)]="regPassword"
+              name="regPassword"
+              required
+              autocomplete="new-password"
+              placeholder="Mínimo 3 caracteres"
+              class="w-full pl-10 pr-11 py-2.5 bg-slate-50 border border-slate-200/90 rounded-xl text-xs sm:text-sm text-slate-900 font-bold focus:bg-white focus:outline-none min-h-[44px] transition-all" />
+            
+            <button type="button" (click)="mostrarRegPassword.set(!mostrarRegPassword())"
+              class="absolute right-3 top-2.5 text-slate-400 hover:text-slate-700 p-1 text-xs font-bold transition-colors">
+              {{ mostrarRegPassword() ? '🙈' : '👁️' }}
+            </button>
+          </div>
+        </div>
+
+        <!-- Confirmar Contraseña -->
+        <div class="space-y-1.5">
+          <label class="block text-[11px] font-black uppercase tracking-wider text-slate-600">
+            Confirmar Contraseña
+          </label>
+          <div class="relative">
+            <span class="absolute left-3.5 top-3 text-slate-400 text-sm">🔒</span>
+            <input [type]="mostrarRegPassword() ? 'text' : 'password'"
+              [(ngModel)]="regPasswordConfirmacion"
+              name="regPasswordConfirmacion"
+              required
+              autocomplete="new-password"
+              placeholder="Repite tu contraseña"
+              class="w-full pl-10 pr-3.5 py-2.5 bg-slate-50 border border-slate-200/90 rounded-xl text-xs sm:text-sm text-slate-900 font-bold focus:bg-white focus:outline-none min-h-[44px] transition-all" />
+          </div>
+        </div>
+
+        <!-- Nota Informativa Rol Usuario -->
+        <div class="p-3 bg-blue-50/70 border border-blue-200/70 rounded-xl text-[11px] text-blue-800 flex items-start gap-2">
+          <span class="text-sm shrink-0">ℹ️</span>
+          <span>Tu cuenta se creará con rol de <strong>Usuario</strong>, lo que te permitirá llevar el control directo de tus faenas y ganancias individuales.</span>
+        </div>
+
+        <!-- Botón Registrarse -->
+        <button type="submit" [disabled]="cargando()"
+          class="w-full py-3 px-4 rounded-xl bg-[#0f172a] hover:bg-black text-white text-xs sm:text-sm font-bold shadow-md transition-all apple-btn-active min-h-[46px] flex items-center justify-center gap-2 mt-2 cursor-pointer disabled:opacity-50">
+          @if (cargando()) {
+            <span class="inline-block w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
+            <span>Creando cuenta...</span>
+          } @else {
+            <span>Crear Cuenta y Entrar</span>
+            <span>→</span>
+          }
+        </button>
+
+        <!-- Switch a Login -->
+        <div class="text-center pt-1">
+          <button type="button" (click)="cambiarModo('login')"
+            class="text-xs text-slate-500 hover:text-slate-800 font-bold underline cursor-pointer transition-colors">
+            ¿Ya tienes una cuenta? Inicia sesión aquí
+          </button>
+        </div>
+
+      </form>
+    }
+
+  </div>
+</div>

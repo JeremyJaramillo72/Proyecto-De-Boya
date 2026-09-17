@@ -1,0 +1,475 @@
+<div class="w-full space-y-6">
+  
+  <!-- Toast de Éxito Flotante -->
+  @if (mensajeExito()) {
+    <div class="fixed top-5 right-5 z-50 flex items-center gap-2.5 px-4 py-3 bg-slate-900 text-white rounded-2xl shadow-2xl border border-slate-700 text-xs font-bold no-print animate-fade-in">
+      <svg class="w-4 h-4 text-emerald-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+      <span>{{ mensajeExito() }}</span>
+    </div>
+  }
+
+  <!-- MODAL DE CONFIRMACIÓN DE ELIMINACIÓN CON DISEÑO APPLE -->
+  @if (modalEliminarAbierto()) {
+    <div class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm no-print">
+      <div class="bg-white rounded-3xl shadow-2xl border border-slate-200/80 max-w-md w-full p-6 space-y-4">
+        
+        <div class="flex items-center gap-3.5">
+          <div class="w-11 h-11 rounded-2xl bg-red-50 border border-red-200/60 text-red-600 flex items-center justify-center shrink-0">
+            <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/>
+            </svg>
+          </div>
+          <div>
+            <h3 class="text-base sm:text-lg font-black text-slate-900">
+              ¿Eliminar Bajada de Madera?
+            </h3>
+            <p class="text-xs text-slate-500 font-medium">
+              Esta acción eliminará el registro de la nómina y los saldos.
+            </p>
+          </div>
+        </div>
+
+        <!-- Detalles del registro -->
+        @if (itemAEliminar()) {
+          <div class="p-4 rounded-2xl bg-slate-50 border border-slate-200/70 text-xs space-y-2">
+            <div class="flex justify-between">
+              <span class="text-slate-500 font-medium">Fecha:</span>
+              <span class="font-bold text-slate-900 font-mono">{{ itemAEliminar()?.fecha }}</span>
+            </div>
+            <div class="flex justify-between">
+              <span class="text-slate-500 font-medium">Faena:</span>
+              <span class="font-bold text-slate-900">{{ itemAEliminar()?.cantidad_carros }} Carro(s) • {{ itemAEliminar()?.filas_por_carro }} filas</span>
+            </div>
+            <div class="flex justify-between">
+              <span class="text-slate-500 font-medium">Cuadrilla:</span>
+              <span class="font-bold text-slate-900">{{ itemAEliminar()?.trabajadores?.length }} personas</span>
+            </div>
+            <div class="flex justify-between">
+              <span class="text-slate-500 font-medium">Monto faena total:</span>
+              <span class="font-bold text-slate-700 font-mono">${{ itemAEliminar()?.total_pago | number:'1.2-2' }}</span>
+            </div>
+            <div class="flex justify-between pt-2 border-t border-slate-200/60">
+              <span class="text-slate-600 font-bold">A cobrar (por persona):</span>
+              <span class="font-bold text-sm text-emerald-600 font-mono">${{ (itemAEliminar()?.trabajadores?.[0]?.monto_individual || 0) | number:'1.2-2' }}</span>
+            </div>
+          </div>
+        }
+
+        <p class="text-[11px] text-slate-400">
+          Al confirmar, el registro se eliminará de forma permanente del historial de faenas.
+        </p>
+
+        <div class="flex items-center justify-end gap-2.5 pt-2">
+          <button type="button" (click)="cerrarModalEliminar()"
+            class="px-4 py-2 rounded-xl border border-slate-200 text-slate-700 hover:bg-slate-100 font-semibold text-xs transition-all apple-btn-active min-h-[38px] cursor-pointer">
+            Cancelar
+          </button>
+          <button type="button" (click)="ejecutarEliminar()"
+            class="px-4 py-2 rounded-xl bg-red-600 hover:bg-red-700 text-white font-bold text-xs shadow-xs transition-all apple-btn-active min-h-[38px] cursor-pointer">
+            Sí, Eliminar
+          </button>
+        </div>
+
+      </div>
+    </div>
+  }
+
+  <!-- ENCABEZADO EJECUTIVO -->
+  <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+    <div>
+      <div class="flex items-center gap-2">
+        <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+        <span class="text-[10px] font-bold uppercase tracking-wider text-slate-500">MIS REGISTROS • CARROS DE BOYA</span>
+      </div>
+      <h1 class="text-xl sm:text-2xl font-black text-slate-900 tracking-tight mt-0.5">
+        Bajada de Madera • Mis Faenas
+      </h1>
+      <p class="text-xs sm:text-sm text-slate-500 mt-0.5 font-medium">
+        Registro de mis bajadas de madera. Tarifa de <strong class="text-slate-800 font-bold">$5.00 por fila</strong> dividida entre la cuadrilla para calcular <strong class="text-emerald-700 font-bold">lo que me van a pagar</strong>.
+      </p>
+    </div>
+
+    <button (click)="abrirFormularioNuevo()"
+      class="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl font-semibold text-xs sm:text-sm transition-all shadow-xs apple-btn-active shrink-0 min-h-[40px] cursor-pointer"
+      [ngClass]="mostrarFormulario() && !modoEdicion() ? 'bg-slate-100 text-slate-800 hover:bg-slate-200 border border-slate-200' : 'bg-[#0f172a] hover:bg-slate-900 text-white'">
+      @if (mostrarFormulario() && !modoEdicion()) {
+        <svg class="w-4 h-4 text-slate-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        <span>Cerrar Formulario</span>
+      } @else {
+        <svg class="w-4 h-4 text-slate-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        <span>Nueva Bajada de Madera</span>
+      }
+    </button>
+  </div>
+
+  <!-- FORMULARIO DE REGISTRO / EDICIÓN -->
+  @if (mostrarFormulario()) {
+    <div class="bg-white rounded-2xl border p-5 sm:p-7 shadow-[0_1px_3px_rgba(0,0,0,0.02)] space-y-5 transition-all"
+      [ngClass]="modoEdicion() ? 'border-amber-400 ring-2 ring-amber-400/20' : 'border-slate-200/80'">
+      
+      <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+        <div class="flex items-center gap-2">
+          <div class="w-7 h-7 rounded-lg bg-amber-50 flex items-center justify-center text-amber-700 border border-amber-200/60">
+            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m20 12-8 8-8-8 8-8z"/></svg>
+          </div>
+          <h2 class="text-sm sm:text-base font-bold text-slate-900">
+            {{ modoEdicion() ? 'Editar Bajada de Madera' : 'Registrar Descarga de Troza' }}
+          </h2>
+        </div>
+        
+        <div class="flex items-center gap-2">
+          <span class="text-xs font-semibold text-amber-800 bg-amber-50 border border-amber-200/60 px-2.5 py-0.5 rounded-md">
+            $5.00 / Fila
+          </span>
+          @if (modoEdicion()) {
+            <button (click)="cancelarEdicion()" class="text-xs font-semibold text-slate-500 hover:text-slate-800 cursor-pointer">
+              ✕ Cancelar
+            </button>
+          }
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        
+        <!-- Fecha -->
+        <div>
+          <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1.5">Fecha</label>
+          <input type="date" [(ngModel)]="fecha"
+            class="w-full bg-slate-50 border border-slate-200/90 rounded-xl px-3 py-2 text-slate-900 text-xs sm:text-sm font-semibold focus:bg-white focus:outline-none min-h-[42px]" />
+        </div>
+
+        <!-- Cantidad de Carros con Stepper -->
+        <div>
+          <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1.5">Cantidad de Carros</label>
+          <div class="flex items-center gap-2">
+            <button type="button" (click)="cantidadCarros = Math.max(1, cantidadCarros - 1)"
+              class="w-10 h-10 rounded-xl bg-slate-100 hover:bg-slate-200 border border-slate-200 flex items-center justify-center text-lg font-bold text-slate-800 apple-btn-active cursor-pointer">
+              −
+            </button>
+            <input type="number" min="1" max="50" [(ngModel)]="cantidadCarros"
+              class="flex-1 text-center bg-slate-50 border border-slate-200/90 rounded-xl py-2 text-slate-900 text-base font-bold font-mono focus:bg-white focus:outline-none min-h-[42px]" />
+            <button type="button" (click)="cantidadCarros = cantidadCarros + 1"
+              class="w-10 h-10 rounded-xl bg-slate-100 hover:bg-slate-200 border border-slate-200 flex items-center justify-center text-lg font-bold text-slate-800 apple-btn-active cursor-pointer">
+              +
+            </button>
+          </div>
+        </div>
+
+        <!-- Filas por Carro con Botones Rápidos -->
+        <div class="sm:col-span-2">
+          <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1.5">Filas por Carro</label>
+          <div class="grid grid-cols-4 gap-2">
+            @for (f of [2, 3, 4, 5]; track f) {
+              <button type="button" (click)="filasPorCarro = f"
+                class="py-2 px-2 rounded-xl border text-xs font-semibold transition-all apple-btn-active min-h-[42px] flex flex-col items-center justify-center cursor-pointer"
+                [ngClass]="filasPorCarro === f ? 'bg-[#0f172a] border-[#0f172a] text-white shadow-xs' : 'bg-slate-50 border-slate-200/80 text-slate-700 hover:bg-slate-100'">
+                <span>{{ f }} Filas</span>
+                <span class="text-[10px] opacity-75 font-mono">${{ f * 5 }}</span>
+              </button>
+            }
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Selección de Trabajadores (Chips Grandes Táctiles) -->
+      <div>
+        <div class="flex items-center justify-between mb-2">
+          <label class="text-[11px] font-bold uppercase tracking-wider text-slate-600">
+            ¿Quiénes descargaron? ({{ seleccionadosIds().length }} seleccionados)
+          </label>
+          <div class="flex items-center gap-2">
+            <button type="button" (click)="seleccionarTodosTrabajadores()" class="text-xs text-indigo-600 hover:underline font-semibold cursor-pointer">
+              Seleccionar todos
+            </button>
+            <span class="text-slate-300">•</span>
+            <button type="button" (click)="limpiarSeleccionTrabajadores()" class="text-xs text-slate-500 hover:underline font-semibold cursor-pointer">
+              Limpiar
+            </button>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-7 gap-2">
+          @for (t of dataService.trabajadores(); track t.id) {
+            <button type="button" (click)="toggleTrabajador(t.id)"
+              class="p-2.5 rounded-xl text-xs font-semibold flex items-center justify-between border transition-all apple-btn-active min-h-[42px] cursor-pointer"
+              [ngClass]="estaSeleccionado(t.id) ? 'bg-[#0f172a] border-[#0f172a] text-white shadow-xs' : 'bg-slate-50 border-slate-200/80 text-slate-700 hover:bg-slate-100'">
+              <span>{{ t.alias || t.nombre }}{{ esMiTrabajador(t) ? ' (Yo)' : '' }}</span>
+              <span class="text-xs font-bold">{{ estaSeleccionado(t.id) ? '✓' : '+' }}</span>
+            </button>
+          }
+        </div>
+      </div>
+
+      <!-- Observaciones -->
+      <div>
+        <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-500 mb-1.5">Observación / Chofer (opcional)</label>
+        <input type="text" [(ngModel)]="observaciones" placeholder="Ej: Camión de troza fina, madera verde..."
+          class="w-full bg-slate-50 border border-slate-200/90 rounded-xl px-3 py-2 text-slate-900 text-xs sm:text-sm focus:bg-white focus:outline-none min-h-[42px]" />
+      </div>
+
+      <!-- Caja de Cálculo en Vivo & Guardar -->
+      <div class="rounded-2xl bg-slate-50/80 border border-slate-200/80 p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <span class="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Cálculo de Faena</span>
+          <div class="text-sm sm:text-base text-slate-800 mt-0.5 font-medium">
+            {{ cantidadCarros }} carro(s) × {{ filasPorCarro }} filas = 
+            <strong class="text-slate-900 font-extrabold text-base sm:text-lg font-mono">${{ totalCalculado() | number:'1.2-2' }}</strong>
+          </div>
+          <span class="text-xs text-slate-500">
+            Dividido entre {{ seleccionadosIds().length }} trabajador(es)
+          </span>
+        </div>
+
+        <div class="flex items-center justify-between sm:justify-end gap-4 pt-2 sm:pt-0 border-t sm:border-t-0 border-slate-200">
+          <div class="text-left sm:text-right">
+            <span class="text-[10px] uppercase font-bold text-emerald-600 tracking-wider block">Mi Pago a Cobrar</span>
+            <div class="text-2xl sm:text-3xl font-extrabold text-emerald-600 tracking-tight font-mono">
+              ${{ montoPorPersonaCalculado() | number:'1.2-2' }}
+            </div>
+            <span class="text-[10px] text-slate-400 font-medium block">Total carro: ${{ totalCalculado() | number:'1.2-2' }}</span>
+          </div>
+
+          @if (modoEdicion()) {
+            <button type="button" (click)="cancelarEdicion()"
+              class="px-4 py-2.5 rounded-xl border border-slate-300 text-slate-700 font-semibold text-xs sm:text-sm hover:bg-slate-100 transition-all min-h-[42px] cursor-pointer">
+              Cancelar
+            </button>
+          }
+
+          <button type="button" (click)="guardarDescarga()" [disabled]="seleccionadosIds().length === 0"
+            class="px-5 py-2.5 rounded-xl disabled:opacity-30 disabled:cursor-not-allowed text-white font-bold text-xs sm:text-sm shadow-xs transition-all apple-btn-active min-h-[42px] cursor-pointer"
+            [ngClass]="modoEdicion() ? 'bg-amber-600 hover:bg-amber-700' : 'bg-[#0f172a] hover:bg-slate-900'">
+            {{ modoEdicion() ? 'Guardar Cambios' : 'Guardar Bajada' }}
+          </button>
+        </div>
+      </div>
+
+    </div>
+  }
+
+  <!-- HISTORIAL: BARRA DE FILTRO REACTIVA -->
+  <div class="bg-white rounded-2xl border border-slate-200/80 shadow-[0_1px_3px_rgba(0,0,0,0.02)] overflow-hidden space-y-4 p-4 sm:p-5">
+    
+    <!-- Fila de Controles de Filtro -->
+    <div class="flex flex-col xl:flex-row items-stretch xl:items-center justify-between gap-3 pb-3 border-b border-slate-100">
+      <div>
+        <div class="flex items-center gap-2">
+          <div class="w-6 h-6 rounded-lg bg-amber-50 flex items-center justify-center text-amber-700">
+            <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m20 12-8 8-8-8 8-8z"/></svg>
+          </div>
+          <h2 class="text-base font-bold text-slate-900 tracking-tight">
+            Historial de Bajadas Registradas
+          </h2>
+        </div>
+        <p class="text-xs text-slate-500 font-medium mt-1 flex flex-wrap items-center gap-2">
+          <span>{{ authService.esUsuario() ? ('Mis faenas registradas: ' + descargasFiltradas().length) : ('Mostrando ' + descargasFiltradas().length + ' de ' + dataService.descargas().length + ' faenas') }}</span>
+          <span class="text-slate-300">•</span>
+          <span class="text-emerald-700 font-bold bg-emerald-50 border border-emerald-200/80 px-2.5 py-0.5 rounded-full font-mono text-[11px]">
+            A Cobrar: ${{ totalACobrar() | number:'1.2-2' }}
+          </span>
+          <span class="text-amber-700 font-bold bg-amber-50 border border-amber-200/80 px-2.5 py-0.5 rounded-full font-mono text-[11px]">
+            Pendiente: ${{ miTotalPendiente() | number:'1.2-2' }}
+          </span>
+          @if (miTotalCobrado() > 0) {
+            <span class="text-emerald-700 font-bold bg-emerald-50 border border-emerald-200/80 px-2.5 py-0.5 rounded-full font-mono text-[11px]">
+              Cobrado: ${{ miTotalCobrado() | number:'1.2-2' }}
+            </span>
+          }
+          @if (authService.esAdmin()) {
+            <span class="text-slate-400 font-normal">
+              (Total faenas patio: ${{ totalFiltrado() | number:'1.2-2' }})
+            </span>
+          }
+        </p>
+      </div>
+
+      <!-- Filtros Reactivos -->
+      <div class="flex flex-wrap items-center gap-2">
+        
+        <!-- Buscador por texto -->
+        <div class="relative min-w-[180px]">
+          <svg class="absolute left-2.5 top-2.5 w-3.5 h-3.5 text-slate-400 pointer-events-none" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+          <input type="text"
+            [ngModel]="filtroTexto()"
+            (ngModelChange)="filtroTexto.set($event)"
+            placeholder="Buscar trabajador..."
+            class="w-full pl-8 pr-2.5 py-1.5 bg-slate-50 border border-slate-200/90 rounded-xl text-xs text-slate-800 font-medium focus:bg-white focus:outline-none min-h-[36px]" />
+        </div>
+
+        <!-- Rango: Desde -->
+        <div class="flex items-center gap-1.5 text-xs">
+          <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Desde:</span>
+          <input type="date"
+            [ngModel]="fechaDesde()"
+            (ngModelChange)="fechaDesde.set($event)"
+            class="bg-slate-50 border border-slate-200/90 rounded-xl px-2.5 py-1.5 text-xs text-slate-800 font-semibold focus:bg-white focus:outline-none min-h-[36px]" />
+        </div>
+
+        <!-- Rango: Hasta -->
+        <div class="flex items-center gap-1.5 text-xs">
+          <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Hasta:</span>
+          <input type="date"
+            [ngModel]="fechaHasta()"
+            (ngModelChange)="fechaHasta.set($event)"
+            class="bg-slate-50 border border-slate-200/90 rounded-xl px-2.5 py-1.5 text-xs text-slate-800 font-semibold focus:bg-white focus:outline-none min-h-[36px]" />
+        </div>
+
+        <!-- Botones Rápidos de Período -->
+        <div class="bg-slate-100 p-0.5 rounded-xl border border-slate-200/60 flex items-center gap-0.5 text-xs">
+          <button (click)="establecerPeriodo('hoy')" class="px-2.5 py-1 rounded-lg text-slate-600 hover:text-slate-900 font-semibold cursor-pointer">
+            Hoy
+          </button>
+          <button (click)="establecerPeriodo('semana')" class="px-2.5 py-1 rounded-lg text-slate-600 hover:text-slate-900 font-semibold cursor-pointer">
+            7 días
+          </button>
+          <button (click)="establecerPeriodo('abril')" class="px-2.5 py-1 rounded-lg text-slate-600 hover:text-slate-900 font-semibold cursor-pointer">
+            Abril
+          </button>
+          <button (click)="establecerPeriodo('mes')" class="px-2.5 py-1 rounded-lg text-slate-600 hover:text-slate-900 font-semibold cursor-pointer">
+            Mes
+          </button>
+          <button (click)="establecerPeriodo('todo')" class="px-2.5 py-1 rounded-lg text-slate-600 hover:text-slate-900 font-semibold cursor-pointer">
+            Todo
+          </button>
+        </div>
+
+        @if (fechaDesde() || fechaHasta() || filtroTexto()) {
+          <button (click)="limpiarFiltrosFecha()" class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-xs font-semibold text-slate-600 cursor-pointer">
+            <svg class="w-3.5 h-3.5 text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            <span>Restablecer</span>
+          </button>
+        }
+      </div>
+    </div>
+
+    <!-- LISTADO DE TARJETAS EJECUTIVAS -->
+    <div class="divide-y divide-slate-100">
+      @for (d of descargasFiltradas(); track d.id) {
+        <div class="py-4 space-y-3 hover:bg-slate-50/60 rounded-xl transition-colors px-2">
+          
+          <!-- Encabezado de Faena + Botones CRUD -->
+          <div class="flex items-start justify-between gap-2.5">
+            <div class="flex items-start gap-3 min-w-0 flex-1">
+              <div class="w-10 h-10 rounded-xl bg-amber-50 text-amber-800 border border-amber-200/60 flex items-center justify-center shrink-0 mt-0.5">
+                <svg class="w-5 h-5 text-amber-700" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><path d="m20 12-8 8-8-8 8-8z"/><path d="M12 4v16"/></svg>
+              </div>
+              <div class="min-w-0 flex-1">
+                <div class="flex items-center gap-2 flex-wrap">
+                  <span class="text-sm sm:text-base font-bold text-slate-900 leading-tight">
+                    {{ d.cantidad_carros }} Carro(s) • {{ d.filas_por_carro }} filas
+                  </span>
+                  <span class="text-[10px] px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 font-mono font-semibold shrink-0">
+                    {{ d.fecha }}
+                  </span>
+                </div>
+                @if (d.observaciones) {
+                  <p class="text-xs text-slate-500 mt-1 font-medium break-words">{{ d.observaciones }}</p>
+                }
+              </div>
+            </div>
+
+            <div class="flex items-center gap-3 shrink-0">
+              <!-- Monto visible en pantallas medianas / desktop -->
+              <div class="hidden sm:block text-right">
+                <span class="text-[10px] font-bold uppercase tracking-wider text-emerald-600 block">
+                  Mi Pago / A Cobrar
+                </span>
+                <div class="text-2xl font-extrabold text-emerald-600 tracking-tight font-mono">
+                  ${{ (getMiDetalle(d)?.monto_individual || (d.total_pago / (d.trabajadores.length || 1))) | number:'1.2-2' }}
+                </div>
+                <span class="text-[10px] text-slate-400 font-medium block">
+                  Total faena: ${{ d.total_pago | number:'1.2-2' }} ({{ d.trabajadores.length }} pers.)
+                </span>
+              </div>
+
+              <!-- Botones de Acción CRUD -->
+              @if (authService.esAdmin()) {
+                <div class="flex items-center gap-1.5 sm:border-l sm:border-slate-200 sm:pl-3">
+                  <button (click)="iniciarEdicion(d)" title="Editar esta faena"
+                    class="p-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 text-xs font-semibold transition-colors apple-btn-active cursor-pointer">
+                    <svg class="w-4 h-4 text-slate-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/></svg>
+                  </button>
+                  <button (click)="abrirModalEliminar(d)" title="Eliminar esta faena"
+                    class="p-2 rounded-xl bg-slate-100 hover:bg-red-50 hover:text-red-700 text-slate-600 text-xs font-semibold transition-colors apple-btn-active cursor-pointer">
+                    <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg>
+                  </button>
+                </div>
+              }
+            </div>
+          </div>
+
+          <!-- Monto Destacado en Móvil (Full Width y espacioso) -->
+          <div class="sm:hidden flex items-center justify-between p-2.5 rounded-xl bg-emerald-50/60 border border-emerald-200/60">
+            <div>
+              <span class="text-[10px] font-bold uppercase tracking-wider text-emerald-700 block">
+                Mi Pago / A Cobrar
+              </span>
+              <span class="text-[10px] text-slate-500 font-medium">
+                Total faena: ${{ d.total_pago | number:'1.2-2' }} ({{ d.trabajadores.length }} pers.)
+              </span>
+            </div>
+            <div class="text-xl font-extrabold text-emerald-700 tracking-tight font-mono">
+              ${{ (getMiDetalle(d)?.monto_individual || (d.total_pago / (d.trabajadores.length || 1))) | number:'1.2-2' }}
+            </div>
+          </div>
+
+          <!-- Mi Cobro & Compañeros de Cuadrilla -->
+          <div class="pt-2.5 border-t border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            
+            <!-- Mi Estado de Cobro -->
+            <div class="flex items-center gap-2">
+              <span class="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Mi Pago:</span>
+              @if (getMiDetalle(d); as miDetalle) {
+                <button type="button" (click)="toggleMiPago(d)"
+                  class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-all apple-btn-active shadow-xs min-h-[34px] cursor-pointer"
+                  [ngClass]="miDetalle.pagado ? 'bg-emerald-600 hover:bg-emerald-700 text-white' : 'bg-amber-500 hover:bg-amber-600 text-white'">
+                  @if (miDetalle.pagado) {
+                    <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                    <span>Ya Cobrado (${{ miDetalle.monto_individual | number:'1.2-2' }})</span>
+                  } @else {
+                    <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+                    <span>Pendiente de Cobro (${{ miDetalle.monto_individual | number:'1.2-2' }})</span>
+                  }
+                </button>
+              }
+            </div>
+
+            <!-- Compañeros de Cuadrilla (Informativo) -->
+            <div class="flex flex-wrap items-center gap-2">
+              <span class="text-[10px] uppercase font-bold text-slate-400">Descargado con:</span>
+              @if (getCompaneros(d).length > 0) {
+                <div class="flex flex-wrap items-center gap-1.5">
+                  @for (comp of getCompaneros(d); track comp.trabajador_id) {
+                    <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-slate-100 text-slate-700 text-xs font-semibold border border-slate-200/80">
+                      <span class="w-1.5 h-1.5 rounded-full bg-slate-400"></span>
+                      <span>{{ comp.trabajador_nombre }}</span>
+                      <span class="text-slate-400 text-[10px] font-mono">(${{ comp.monto_individual | number:'1.2-2' }})</span>
+                    </span>
+                  }
+                </div>
+              } @else {
+                <span class="text-xs text-slate-400 italic">Solo yo</span>
+              }
+            </div>
+
+          </div>
+
+        </div>
+      } @empty {
+        <div class="py-14 px-4 text-center space-y-2.5">
+          <div class="w-12 h-12 mx-auto rounded-2xl bg-slate-50 border border-slate-200/80 flex items-center justify-center text-slate-400">
+            <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="m20 12-8 8-8-8 8-8z"/></svg>
+          </div>
+          <h3 class="text-sm font-bold text-slate-800">
+            {{ authService.esUsuario() ? 'No tienes bajadas de madera registradas' : 'No hay bajadas registradas' }}
+          </h3>
+          <p class="text-xs text-slate-400 max-w-sm mx-auto font-medium">
+            {{ authService.esUsuario() ? 'Tu cuenta de usuario es nueva o aún no has participado en ninguna faena. Cuando descargues un carro, aparecerá aquí con tu pago a cobrar.' : 'No se encontraron registros de bajada que coincidan con los filtros aplicados.' }}
+          </p>
+        </div>
+      }
+    </div>
+  </div>
+
+</div>

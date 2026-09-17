@@ -1,0 +1,31 @@
+<div class="min-h-screen w-full max-w-full overflow-x-hidden bg-[#f8fafc] text-slate-800 flex flex-col font-sans selection:bg-[#0f172a] selection:text-white">
+  
+  @if (authService.estaAutenticado()) {
+    <!-- Header Superior Réplica PuntoExpress -->
+    <app-header class="w-full shrink-0"></app-header>
+
+    <!-- Contenedor Principal: Sidebar Izquierdo + Vista Activa -->
+    <div class="flex-1 flex flex-row w-full min-w-0">
+      <!-- Barra Lateral Izquierda -->
+      <app-sidebar class="shrink-0"></app-sidebar>
+
+      <!-- Área de Contenido Principal -->
+      <div class="flex-1 flex flex-col min-w-0 max-w-full overflow-x-hidden pb-20 md:pb-6">
+        <main class="flex-1 w-full px-4 sm:px-6 lg:px-8 py-5 sm:py-6 max-w-full min-w-0">
+          <router-outlet></router-outlet>
+        </main>
+
+        <footer class="border-t border-slate-200/70 bg-white/80 backdrop-blur py-3 px-6 sm:px-8 text-xs text-slate-400 no-print flex flex-col sm:flex-row justify-between items-center gap-2">
+          <p class="font-medium text-slate-500">BoyaControl • Control de Madera de Boya y Embarque de Tráilers</p>
+          <p class="font-mono text-[11px] text-slate-400">Sistema Operativo Patio 01 • v2.0</p>
+        </footer>
+      </div>
+    </div>
+  } @else {
+    <!-- Pantalla de Login -->
+    <main class="flex-1 w-full flex items-center justify-center p-4">
+      <router-outlet></router-outlet>
+    </main>
+  }
+
+</div>

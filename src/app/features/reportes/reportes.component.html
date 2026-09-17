@@ -1,0 +1,682 @@
+<div class="w-full space-y-5">
+  
+  <!-- Toast de Notificación Flotante -->
+  @if (mensajeExito()) {
+    <div class="fixed top-5 right-5 z-50 flex items-center gap-2.5 px-4 py-3 bg-slate-900 text-white rounded-2xl shadow-2xl border border-slate-700 text-xs font-bold no-print animate-fade-in">
+      <span class="text-emerald-400 text-sm">✓</span>
+      <span>{{ mensajeExito() }}</span>
+    </div>
+  }
+
+  <!-- ======================================================= -->
+  <!-- VISTA EN PANTALLA (no-print para no aparecer en el PDF) -->
+  <!-- ======================================================= -->
+  <div class="no-print space-y-6">
+
+    <!-- 1. ENCABEZADO EJECUTIVO -->
+    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div>
+        <div class="flex flex-wrap items-center gap-2.5">
+          <h1 class="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">
+            Auditoría y Liquidación
+          </h1>
+          @if (filtroTipoOperacion() === 'DESCARGA') {
+            <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-amber-50 text-amber-800 border border-amber-200/80">
+              <svg class="w-3.5 h-3.5 text-amber-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="m20 12-8 8-8-8 8-8z"/>
+                <path d="M12 4v16"/>
+              </svg>
+              Solo Bajadas de Madera
+            </span>
+          } @else if (filtroTipoOperacion() === 'EMBARQUE') {
+            <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-blue-50 text-blue-800 border border-blue-200/80">
+              <svg class="w-3.5 h-3.5 text-blue-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect width="16" height="13" x="1" y="6" rx="2"/>
+                <path d="M17 9h4l3 3v4h-7"/>
+                <circle cx="5.5" cy="18.5" r="2.5"/>
+                <circle cx="18.5" cy="18.5" r="2.5"/>
+              </svg>
+              Solo Embarque de Tráilers
+            </span>
+          }
+        </div>
+        <p class="text-xs sm:text-sm text-slate-500 mt-0.5 font-medium">
+          Historial de nómina por faena, liquidaciones acumuladas y control oficial de pagos.
+        </p>
+      </div>
+
+      <div class="flex items-center gap-2">
+        <button (click)="imprimirReporte()"
+          class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-white hover:bg-slate-50 border border-slate-200/90 text-xs font-semibold text-slate-700 shadow-xs transition-all apple-btn-active min-h-[38px]">
+          <svg class="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/>
+          </svg>
+          <span>Imprimir Reporte</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- 2. CUATRO TARJETAS DE MÉTRICAS EJECUTIVAS -->
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      
+      <!-- Tarjeta 1: Total Faenas -->
+      <div class="bg-white rounded-2xl border border-slate-200/80 p-5 shadow-[0_1px_3px_rgba(0,0,0,0.02)] transition-all">
+        <div class="flex items-center justify-between">
+          <span class="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Historial de Faenas</span>
+          <div class="w-8 h-8 rounded-xl bg-slate-100/80 flex items-center justify-center text-slate-600">
+            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+              <polyline points="14 2 14 8 20 8"/>
+              <line x1="16" y1="13" x2="8" y2="13"/>
+              <line x1="16" y1="17" x2="8" y2="17"/>
+              <polyline points="10 9 9 9 8 9"/>
+            </svg>
+          </div>
+        </div>
+        <div class="mt-3">
+          <div class="text-3xl font-extrabold text-slate-900 tracking-tight font-mono">
+            {{ turnosFiltrados().length }}
+          </div>
+          <p class="text-xs text-slate-400 mt-1 font-medium">
+            Registros en el filtro actual
+          </p>
+        </div>
+      </div>
+
+      <!-- Tarjeta 2: Faenas Pendientes -->
+      <div class="bg-white rounded-2xl border border-slate-200/80 p-5 shadow-[0_1px_3px_rgba(0,0,0,0.02)] transition-all">
+        <div class="flex items-center justify-between">
+          <span class="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Estado de Nómina</span>
+          <div class="w-8 h-8 rounded-xl bg-amber-50 flex items-center justify-center text-amber-600 border border-amber-200/40">
+            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="10"/>
+              <polyline points="12 6 12 12 16 14"/>
+            </svg>
+          </div>
+        </div>
+        <div class="mt-3">
+          <div class="text-3xl font-extrabold text-slate-900 tracking-tight font-mono">
+            {{ turnosPendientesCount() }} <span class="text-sm font-semibold text-slate-400">pend.</span>
+          </div>
+          <p class="text-xs text-slate-400 mt-1 font-medium">
+            Faenas por liquidar en cuadrilla
+          </p>
+        </div>
+      </div>
+
+      <!-- Tarjeta 3: Total Generado -->
+      <div class="bg-white rounded-2xl border border-slate-200/80 p-5 shadow-[0_1px_3px_rgba(0,0,0,0.02)] transition-all">
+        <div class="flex items-center justify-between">
+          <span class="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Total Generado</span>
+          <div class="w-8 h-8 rounded-xl bg-purple-50 flex items-center justify-center text-purple-600 border border-purple-200/40">
+            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+              <line x1="12" y1="1" x2="12" y2="23"/>
+              <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+            </svg>
+          </div>
+        </div>
+        <div class="mt-3">
+          <div class="text-3xl font-extrabold text-slate-900 tracking-tight font-mono">
+            ${{ totalRecaudacion() | number:'1.2-2' }}
+          </div>
+          <p class="text-xs text-slate-400 mt-1 font-medium">
+            Monto total generado en faenas
+          </p>
+        </div>
+      </div>
+
+      <!-- Tarjeta 4: Saldo por Liquidar -->
+      <div class="bg-white rounded-2xl border border-slate-200/80 p-5 shadow-[0_1px_3px_rgba(0,0,0,0.02)] transition-all">
+        <div class="flex items-center justify-between">
+          <span class="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Saldo por Liquidar</span>
+          <div class="w-8 h-8 rounded-xl bg-amber-50 flex items-center justify-center text-amber-600 border border-amber-200/40">
+            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 12V7H5a2 2 0 0 1 0-4h14v4"/>
+              <path d="M3 5v14a2 2 0 0 0 2 2h16v-5"/>
+              <path d="M18 12a2 2 0 0 0 0 4h4v-4Z"/>
+            </svg>
+          </div>
+        </div>
+        <div class="mt-3">
+          <div class="text-3xl font-extrabold text-amber-600 tracking-tight font-mono">
+            ${{ totalDiferencia() | number:'1.2-2' }}
+          </div>
+          <p class="text-xs text-slate-400 mt-1 font-medium">
+            Monto pendiente de liquidación
+          </p>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- 3. BARRA DE FILTROS EMPRESARIAL -->
+    <div class="bg-white rounded-2xl border border-slate-200/80 p-4 sm:p-5 shadow-[0_1px_3px_rgba(0,0,0,0.02)] space-y-3.5">
+      
+      <!-- Fila 1: Búsqueda y Filtros Principales (Trabajador + Operación + Estado) -->
+      <div class="flex flex-wrap items-center justify-between gap-3">
+        <!-- Búsqueda Input Reactiva -->
+        <div class="relative flex-1 min-w-[240px]">
+          <svg class="absolute left-3.5 top-3 w-4 h-4 text-slate-400 pointer-events-none" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="11" cy="11" r="8"/>
+            <path d="m21 21-4.3-4.3"/>
+          </svg>
+          <input type="text"
+            [ngModel]="terminoBusqueda()"
+            (ngModelChange)="terminoBusqueda.set($event)"
+            placeholder="Buscar por trabajador, detalle o notas..."
+            class="w-full pl-9 pr-3 py-2 bg-slate-50/80 hover:bg-slate-100/60 focus:bg-white border border-slate-200/90 rounded-xl text-xs text-slate-800 font-medium focus:outline-none focus:ring-2 focus:ring-slate-950/5 transition-all min-h-[38px]" />
+        </div>
+
+        <div class="flex flex-wrap items-center gap-2.5">
+          <!-- Operación Segmented Pills (Todas / Bajada Carros / Tráilers) -->
+          <div class="flex items-center gap-1.5">
+            <span class="text-[10px] uppercase font-bold text-slate-400 tracking-wider">OPERACIÓN:</span>
+            <div class="bg-slate-100 p-0.5 rounded-xl border border-slate-200/60 flex items-center gap-0.5 text-xs">
+              <button (click)="filtroTipoOperacion.set('TODOS')"
+                [ngClass]="filtroTipoOperacion() === 'TODOS' ? 'bg-white font-bold text-slate-900 shadow-xs' : 'text-slate-500 hover:text-slate-900'"
+                class="px-2.5 py-1.5 rounded-lg transition-all text-xs font-semibold cursor-pointer">
+                Todas
+              </button>
+              <button (click)="filtroTipoOperacion.set('DESCARGA')"
+                [ngClass]="filtroTipoOperacion() === 'DESCARGA' ? 'bg-[#0f172a] font-bold text-white shadow-xs' : 'text-slate-500 hover:text-slate-900'"
+                class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg transition-all text-xs font-semibold cursor-pointer">
+                <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m20 12-8 8-8-8 8-8z"/></svg>
+                <span>Bajada Carros</span>
+              </button>
+              <button (click)="filtroTipoOperacion.set('EMBARQUE')"
+                [ngClass]="filtroTipoOperacion() === 'EMBARQUE' ? 'bg-[#0f172a] font-bold text-white shadow-xs' : 'text-slate-500 hover:text-slate-900'"
+                class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg transition-all text-xs font-semibold cursor-pointer">
+                <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="16" height="13" x="1" y="6" rx="2"/><path d="M17 9h4l3 3v4h-7"/></svg>
+                <span>Tráilers</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Empleado Dropdown Reactivo -->
+          @if (authService.esAdmin()) {
+            <div class="flex items-center gap-1.5">
+              <span class="text-[10px] uppercase font-bold text-slate-400 tracking-wider">TRABAJADOR:</span>
+              <select
+                [ngModel]="trabajadorSeleccionado()"
+                (ngModelChange)="trabajadorSeleccionado.set($event)"
+                class="bg-slate-50 border border-slate-200/90 rounded-xl px-3 py-1.5 text-xs text-slate-800 font-semibold focus:bg-white focus:outline-none min-h-[36px] cursor-pointer">
+                <option value="">Todos los trabajadores</option>
+                @for (t of dataService.trabajadores(); track t.id) {
+                  <option [value]="t.alias || t.nombre">{{ t.alias || t.nombre }}</option>
+                }
+              </select>
+            </div>
+          } @else {
+            <div class="flex items-center gap-1.5">
+              <span class="text-[10px] uppercase font-bold text-slate-400 tracking-wider">CUENTA:</span>
+              <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-100 text-slate-800 text-xs font-semibold border border-slate-200">
+                <svg class="w-3.5 h-3.5 text-slate-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="5"/><path d="M20 21a8 8 0 1 0-16 0"/></svg>
+                Mis Faenas ({{ authService.usuarioActual()?.nombre }})
+              </span>
+            </div>
+          }
+
+          <!-- Estado Segmented Pills -->
+          <div class="flex items-center gap-1.5">
+            <span class="text-[10px] uppercase font-bold text-slate-400 tracking-wider">ESTADO:</span>
+            <div class="bg-slate-100 p-0.5 rounded-xl border border-slate-200/60 flex items-center gap-0.5 text-xs">
+              <button (click)="filtroEstado.set('todos')"
+                [ngClass]="filtroEstado() === 'todos' ? 'bg-white font-bold text-slate-900 shadow-xs' : 'text-slate-500 hover:text-slate-900'"
+                class="px-2.5 py-1.5 rounded-lg transition-all font-semibold cursor-pointer">
+                Todos
+              </button>
+              <button (click)="filtroEstado.set('abiertos')"
+                [ngClass]="filtroEstado() === 'abiertos' ? 'bg-white font-bold text-slate-900 shadow-xs' : 'text-slate-500 hover:text-slate-900'"
+                class="px-2.5 py-1.5 rounded-lg transition-all font-semibold cursor-pointer">
+                Por Liquidar
+              </button>
+              <button (click)="filtroEstado.set('cerrados')"
+                [ngClass]="filtroEstado() === 'cerrados' ? 'bg-white font-bold text-slate-900 shadow-xs' : 'text-slate-500 hover:text-slate-900'"
+                class="px-2.5 py-1.5 rounded-lg transition-all font-semibold cursor-pointer">
+                Pagados
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Fila 2: Fechas, Períodos Rápidos y Botones de Acción -->
+      <div class="flex flex-wrap items-center justify-between gap-3 pt-3 border-t border-slate-100">
+        
+        <!-- Rango de Fechas + Segmented Períodos + Limpiar -->
+        <div class="flex flex-wrap items-center gap-2.5">
+          <!-- Rango: Desde -->
+          <div class="flex items-center gap-1.5 text-xs">
+            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Desde:</span>
+            <input type="date"
+              [ngModel]="fechaDesde()"
+              (ngModelChange)="onFechaDesdeChange($event)"
+              class="bg-slate-50 border border-slate-200/90 rounded-xl px-2.5 py-1.5 text-xs text-slate-800 font-semibold focus:bg-white focus:outline-none min-h-[36px]" />
+          </div>
+
+          <!-- Rango: Hasta -->
+          <div class="flex items-center gap-1.5 text-xs">
+            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Hasta:</span>
+            <input type="date"
+              [ngModel]="fechaHasta()"
+              (ngModelChange)="onFechaHastaChange($event)"
+              class="bg-slate-50 border border-slate-200/90 rounded-xl px-2.5 py-1.5 text-xs text-slate-800 font-semibold focus:bg-white focus:outline-none min-h-[36px]" />
+          </div>
+
+          <!-- Período: Segmented Pills Rápidas -->
+          <div class="bg-slate-100 p-0.5 rounded-xl border border-slate-200/60 flex items-center gap-0.5 text-xs">
+            <button (click)="cambiarPeriodo('hoy')"
+              [ngClass]="filtroPeriodo() === 'hoy' ? 'bg-white font-bold text-slate-900 shadow-xs' : 'text-slate-500 hover:text-slate-900'"
+              class="px-2.5 py-1 rounded-lg transition-all font-semibold cursor-pointer">
+              Hoy
+            </button>
+            <button (click)="cambiarPeriodo('7dias')"
+              [ngClass]="filtroPeriodo() === '7dias' ? 'bg-white font-bold text-slate-900 shadow-xs' : 'text-slate-500 hover:text-slate-900'"
+              class="px-2.5 py-1 rounded-lg transition-all font-semibold cursor-pointer">
+              7 días
+            </button>
+            <button (click)="cambiarPeriodo('mes')"
+              [ngClass]="filtroPeriodo() === 'mes' ? 'bg-white font-bold text-slate-900 shadow-xs' : 'text-slate-500 hover:text-slate-900'"
+              class="px-2.5 py-1 rounded-lg transition-all font-semibold cursor-pointer">
+              Mes
+            </button>
+            <button (click)="cambiarPeriodo('todo')"
+              [ngClass]="filtroPeriodo() === 'todo' && !fechaDesde() && !fechaHasta() ? 'bg-white font-bold text-slate-900 shadow-xs' : 'text-slate-500 hover:text-slate-900'"
+              class="px-2.5 py-1 rounded-lg transition-all font-semibold cursor-pointer">
+              Todo
+            </button>
+          </div>
+
+          @if (fechaDesde() || fechaHasta() || terminoBusqueda() || trabajadorSeleccionado() || filtroEstado() !== 'todos' || filtroPeriodo() !== 'todo' || filtroTipoOperacion() !== 'TODOS') {
+            <button (click)="limpiarTodosFiltros()" class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200/80 text-xs font-semibold text-slate-600 transition-colors min-h-[36px] cursor-pointer">
+              <svg class="w-3.5 h-3.5 text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+              <span>Restablecer</span>
+            </button>
+          }
+        </div>
+
+        <!-- Botones de Acción: Generar Reporte PDF & Exportar CSV -->
+        <div class="flex flex-wrap items-center gap-2">
+          <button (click)="generarReporte()"
+            title="Generar y descargar reporte oficial en PDF"
+            class="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-[#0f172a] hover:bg-slate-900 text-white text-xs font-semibold shadow-xs transition-all apple-btn-active min-h-[36px] cursor-pointer">
+            <svg class="w-4 h-4 text-slate-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+              <polyline points="14 2 14 8 20 8"/>
+              <path d="M9 15h6"/>
+              <path d="M9 11h6"/>
+            </svg>
+            <span>Generar Reporte</span>
+          </button>
+          <button (click)="exportarCSV()"
+            class="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-white hover:bg-slate-50 border border-slate-200/90 text-slate-700 text-xs font-semibold shadow-xs transition-all apple-btn-active min-h-[36px] cursor-pointer">
+            <svg class="w-4 h-4 text-slate-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+              <polyline points="7 10 12 15 17 10"/>
+              <line x1="12" y1="15" x2="12" y2="3"/>
+            </svg>
+            <span>Exportar CSV</span>
+          </button>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- 4. TABLA DE AUDITORÍA EN PANTALLA -->
+    <div class="bg-white rounded-2xl border border-slate-200/80 shadow-[0_1px_3px_rgba(0,0,0,0.02)] overflow-hidden">
+      
+      <!-- VISTA MÓVIL (Tarjetas de Faena) -->
+      <div class="md:hidden divide-y divide-slate-100">
+        @for (t of turnosFiltrados(); track t.numero + t.trabajador + t.fecha) {
+          <div class="p-4 space-y-3">
+            <div class="flex items-center justify-between">
+              <div class="flex items-center gap-2">
+                <span class="font-mono text-xs font-semibold text-slate-500">{{ t.numero }}</span>
+                <span class="text-xs font-bold text-slate-900">{{ t.trabajador }}</span>
+              </div>
+              <span class="px-2.5 py-0.5 rounded-full text-[11px] font-semibold"
+                [ngClass]="!t.pagado ? 'bg-amber-50 text-amber-700 ring-1 ring-amber-600/20' : 'bg-emerald-50 text-emerald-700 ring-1 ring-emerald-600/20'">
+                {{ t.estado }}
+              </span>
+            </div>
+
+            <div class="flex items-center justify-between text-xs">
+              <span class="text-slate-400 font-mono">{{ t.fecha }}</span>
+              <span class="font-bold text-sm text-slate-900 font-mono">${{ t.monto | number:'1.2-2' }}</span>
+            </div>
+
+            <div class="flex items-center justify-between pt-2.5 border-t border-slate-100 text-xs">
+              <span class="text-slate-500">{{ t.detalle }}</span>
+              
+              <button (click)="togglePago(t)"
+                class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg font-semibold text-xs transition-all apple-btn-active min-h-[32px] cursor-pointer"
+                [ngClass]="t.pagado ? 'bg-slate-100 text-slate-600 hover:bg-slate-200' : 'bg-emerald-600 text-white hover:bg-emerald-700 shadow-xs'">
+                @if (t.pagado) {
+                  <svg class="w-3.5 h-3.5 text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+                  <span>Desmarcar</span>
+                } @else {
+                  <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m5 12 5 5L20 7"/></svg>
+                  <span>{{ t.tipo === 'DESCARGA' ? 'Cobrar' : 'Pagar' }}</span>
+                }
+              </button>
+            </div>
+          </div>
+        } @empty {
+          <div class="py-14 px-4 text-center space-y-3">
+            <div class="w-12 h-12 mx-auto rounded-2xl bg-slate-50 border border-slate-200/80 flex items-center justify-center text-slate-400">
+              <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                <polyline points="14 2 14 8 20 8"/>
+              </svg>
+            </div>
+            <p class="text-xs font-bold text-slate-800">
+              {{ authService.esUsuario() ? 'No tienes faenas registradas en tu historial' : 'No hay faenas registradas' }}
+            </p>
+            <p class="text-[11px] text-slate-400 max-w-xs mx-auto font-medium">
+              {{ authService.esUsuario() ? 'Como eres un usuario nuevo o sin faenas, tus registros aparecerán aquí una vez que participes en una descarga o embarque.' : 'No hay faenas que coincidan con los filtros seleccionados.' }}
+            </p>
+          </div>
+        }
+      </div>
+
+      <!-- VISTA ESCRITORIO CON GRID EJECUTIVO -->
+      <div class="hidden md:block overflow-x-auto w-full max-w-full">
+        <table class="w-full text-left text-xs min-w-[760px]">
+          <thead class="bg-slate-50/75 text-slate-500 uppercase font-bold text-[10px] tracking-wider border-b border-slate-200/80">
+            <tr>
+              <th class="px-4 py-3"># Faena</th>
+              <th class="px-4 py-3">Fecha</th>
+              <th class="px-4 py-3">Trabajador</th>
+              <th class="px-4 py-3">Operación</th>
+              <th class="px-4 py-3">Detalle Faena</th>
+              <th class="px-4 py-3 text-right">Monto a Cobrar</th>
+              <th class="px-4 py-3 text-right">Pagado / Cobrado</th>
+              <th class="px-4 py-3 text-right">Por Liquidar</th>
+              <th class="px-4 py-3 text-center">Estado</th>
+              <th class="px-4 py-3 text-center">Acciones</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-slate-100 text-slate-700 font-medium">
+            @for (t of turnosFiltrados(); track t.numero + t.trabajador + t.fecha) {
+              <tr class="hover:bg-slate-50/60 transition-colors">
+                <td class="px-4 py-3 font-mono font-semibold text-slate-500 whitespace-nowrap">
+                  {{ t.numero }}
+                </td>
+                <td class="px-4 py-3 font-mono text-[11px] text-slate-500 whitespace-nowrap">
+                  {{ t.fecha }}
+                </td>
+                <td class="px-4 py-3 font-semibold text-slate-900 whitespace-nowrap">
+                  {{ t.trabajador }}
+                </td>
+                <td class="px-4 py-3 text-[11px] whitespace-nowrap">
+                  <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full font-semibold text-[10px]"
+                    [ngClass]="t.tipo === 'DESCARGA' ? 'bg-amber-50 text-amber-800 border border-amber-200/70' : 'bg-blue-50 text-blue-800 border border-blue-200/70'">
+                    @if (t.tipo === 'DESCARGA') {
+                      <svg class="w-3 h-3 text-amber-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m20 12-8 8-8-8 8-8z"/></svg>
+                      <span>Bajada Madera</span>
+                    } @else {
+                      <svg class="w-3 h-3 text-blue-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="16" height="13" x="1" y="6" rx="2"/><path d="M17 9h4l3 3v4h-7"/></svg>
+                      <span>Tráiler Boya</span>
+                    }
+                  </span>
+                </td>
+                <td class="px-4 py-3 text-slate-600 text-xs max-w-xs">
+                  {{ t.detalle }}
+                  @if (t.observaciones) {
+                    <span class="block text-[11px] text-slate-400 italic">"{{ t.observaciones }}"</span>
+                  }
+                </td>
+                <td class="px-4 py-3 text-right font-bold text-slate-900 whitespace-nowrap font-mono">
+                  ${{ t.monto | number:'1.2-2' }}
+                </td>
+                <td class="px-4 py-3 text-right font-mono text-slate-600 whitespace-nowrap">
+                  {{ t.montoPagado > 0 ? '$' + (t.montoPagado | number:'1.2-2') : '—' }}
+                </td>
+                <td class="px-4 py-3 text-right font-mono font-bold whitespace-nowrap"
+                  [ngClass]="t.montoPendiente > 0 ? 'text-amber-600' : 'text-slate-400'">
+                  {{ t.montoPendiente > 0 ? '$' + (t.montoPendiente | number:'1.2-2') : '—' }}
+                </td>
+                <td class="px-4 py-3 text-center whitespace-nowrap">
+                  <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[11px] font-semibold"
+                    [ngClass]="!t.pagado ? 'bg-amber-50 text-amber-700 ring-1 ring-amber-600/20' : 'bg-emerald-50 text-emerald-700 ring-1 ring-emerald-600/20'">
+                    {{ t.estado }}
+                  </span>
+                </td>
+                <td class="px-4 py-3 text-center whitespace-nowrap">
+                  <button (click)="togglePago(t)"
+                    class="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-semibold transition-all apple-btn-active min-h-[30px] cursor-pointer"
+                    [ngClass]="t.pagado ? 'border border-slate-200 bg-white hover:bg-slate-100 text-slate-600' : 'bg-emerald-600 hover:bg-emerald-700 text-white shadow-xs'"
+                    [title]="t.pagado ? 'Desmarcar' : (t.tipo === 'DESCARGA' ? 'Marcar como cobrado' : 'Marcar como pagado')">
+                    @if (t.pagado) {
+                      <svg class="w-3.5 h-3.5 text-slate-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+                      <span>Desmarcar</span>
+                    } @else {
+                      <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="m5 12 5 5L20 7"/></svg>
+                      <span>{{ t.tipo === 'DESCARGA' ? 'Cobrar' : 'Pagar' }}</span>
+                    }
+                  </button>
+                </td>
+              </tr>
+            } @empty {
+              <tr>
+                <td colspan="10" class="py-16 px-4 text-center">
+                  <div class="flex flex-col items-center gap-3">
+                    <div class="w-12 h-12 rounded-2xl bg-slate-50 border border-slate-200/80 flex items-center justify-center text-slate-400">
+                      <svg class="w-6 h-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                        <polyline points="14 2 14 8 20 8"/>
+                      </svg>
+                    </div>
+                    <div>
+                      <span class="font-bold text-slate-800 text-xs block">
+                        {{ authService.esUsuario() ? 'No tienes faenas registradas en tu historial' : 'No hay faenas registradas' }}
+                      </span>
+                      <span class="text-slate-400 text-[11px] max-w-sm mt-0.5 block">
+                        {{ authService.esUsuario() ? 'Como eres un usuario nuevo o sin faenas, tus registros aparecerán aquí una vez que participes en una descarga o embarque.' : 'No se encontraron faenas que coincidan con los filtros seleccionados.' }}
+                      </span>
+                    </div>
+                  </div>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+
+    </div>
+
+    <!-- 5. BALANCE INDIVIDUAL POR TRABAJADOR -->
+    <div class="bg-white rounded-2xl border border-slate-200/80 p-5 shadow-[0_1px_3px_rgba(0,0,0,0.02)] space-y-3.5">
+      <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+        <div class="flex items-center gap-2">
+          <div class="w-6 h-6 rounded-lg bg-slate-100 flex items-center justify-center text-slate-600">
+            <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+          </div>
+          <h3 class="text-sm font-bold text-slate-900 tracking-tight">
+            Liquidación Acumulada por Trabajador
+          </h3>
+        </div>
+        <span class="text-xs text-slate-400 font-medium">Suma de jornales en el período filtrado</span>
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
+        @for (res of resumenTrabajadores(); track res.id) {
+          <div class="p-4 rounded-xl border border-slate-200/70 bg-slate-50/40 hover:bg-slate-50 transition-all space-y-3">
+            <div class="flex items-center justify-between">
+              <div class="flex items-center gap-2.5">
+                <div class="w-8 h-8 rounded-full bg-slate-900 text-white font-bold text-xs flex items-center justify-center">
+                  {{ res.nombre.charAt(0).toUpperCase() }}
+                </div>
+                <div>
+                  <span class="font-bold text-xs text-slate-900 block leading-tight">{{ res.nombre }}</span>
+                  <span class="text-[10px] text-slate-400 font-medium">{{ res.cantidad_faenas }} faena(s)</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="flex items-center justify-between text-xs pt-2 border-t border-slate-200/60">
+              <span class="text-slate-500 font-medium">Pendiente:</span>
+              <span class="font-mono font-bold text-sm"
+                [ngClass]="res.total_pendiente > 0 ? 'text-amber-600' : 'text-slate-400'">
+                ${{ res.total_pendiente | number:'1.2-2' }}
+              </span>
+            </div>
+
+            <div class="flex items-center justify-between text-[11px] text-slate-400 font-mono">
+              <span>Ganado: ${{ res.total_ganado | number:'1.2-2' }}</span>
+              <span class="text-emerald-700 font-semibold">Pagado: ${{ res.total_pagado | number:'1.2-2' }}</span>
+            </div>
+          </div>
+        }
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ======================================================= -->
+  <!-- PLANTILLA OFICIAL DE IMPRESIÓN / REPORTE PDF PROFESIONAL -->
+  <!-- (Visible ÚNICAMENTE al generar PDF o imprimir)          -->
+  <!-- ======================================================= -->
+  <div class="hidden print-only space-y-6">
+    
+    <!-- Membrete Ejecutivo -->
+    <div class="border-b-2 border-slate-900 pb-4 flex justify-between items-start">
+      <div>
+        <div class="flex items-center gap-2">
+          <span class="text-2xl font-black tracking-tight text-slate-900">BOYACONTROL</span>
+          <span class="text-xs font-bold px-2 py-0.5 rounded bg-slate-100 text-slate-800 border border-slate-300">PATIO 01</span>
+        </div>
+        <h2 class="text-base font-bold text-slate-800 uppercase tracking-wide mt-1">
+          @if (filtroTipoOperacion() === 'DESCARGA') {
+            AUDITORÍA Y LIQUIDACIÓN - BAJADA DE MADERA (CARROS)
+          } @else if (filtroTipoOperacion() === 'EMBARQUE') {
+            AUDITORÍA Y LIQUIDACIÓN - EMBARQUE DE TRÁILERS
+          } @else {
+            AUDITORÍA Y LIQUIDACIÓN OFICIAL DE CUADRILLA
+          }
+        </h2>
+        <p class="text-xs text-slate-600 mt-0.5">
+          @if (filtroTipoOperacion() === 'DESCARGA') {
+            Control exclusivo de Descarga de Carros ($5.00/fila de madera dividida en cuadrilla)
+          } @else if (filtroTipoOperacion() === 'EMBARQUE') {
+            Control exclusivo de Embarque de Tráilers de Bloques ($7.00/persona por tráiler)
+          } @else {
+            Control de Descargas de Madera ($5.00/fila) y Embarque de Tráilers ($7.00/persona)
+          }
+        </p>
+      </div>
+      <div class="text-right text-xs">
+        <p class="font-mono text-slate-700"><strong>Fecha Emisión:</strong> {{ fechaHoy }}</p>
+        <p class="font-mono text-slate-700"><strong>Período:</strong> {{ fechaDesde() || fechaHasta() ? (fechaDesde() + ' al ' + fechaHasta()) : (filtroPeriodo() | uppercase) }}</p>
+        <p class="font-mono text-slate-700"><strong>Operación:</strong> {{ filtroTipoOperacion() === 'TODOS' ? 'TODAS LAS OPERACIONES' : (filtroTipoOperacion() === 'DESCARGA' ? 'SOLO BAJADA DE CARROS' : 'SOLO EMBARQUE TRÁILERS') }}</p>
+        <p class="font-mono text-slate-700"><strong>Trabajador:</strong> {{ trabajadorSeleccionado() || 'TODOS' }}</p>
+      </div>
+    </div>
+
+    <!-- Resumen Financiero en Cajas -->
+    <div class="grid grid-cols-4 gap-3 text-center">
+      <div class="p-3 border border-slate-300 rounded-lg">
+        <span class="text-[9pt] uppercase font-bold text-slate-500 block">Jornadas / Faenas</span>
+        <span class="text-base font-black text-slate-900 block mt-0.5">{{ turnosFiltrados().length }}</span>
+      </div>
+      <div class="p-3 border border-slate-300 rounded-lg">
+        <span class="text-[9pt] uppercase font-bold text-slate-500 block">Total Generado</span>
+        <span class="text-base font-black text-slate-900 block mt-0.5">${{ totalRecaudacion() | number:'1.2-2' }}</span>
+      </div>
+      <div class="p-3 border border-slate-300 rounded-lg bg-slate-50">
+        <span class="text-[9pt] uppercase font-bold text-slate-500 block">Total Pagado</span>
+        <span class="text-base font-black text-slate-900 block mt-0.5">${{ totalPagadoCalculado() | number:'1.2-2' }}</span>
+      </div>
+      <div class="p-3 border border-slate-900 rounded-lg bg-slate-100">
+        <span class="text-[9pt] uppercase font-black text-slate-900 block">Saldo a Liquidar</span>
+        <span class="text-base font-black text-slate-900 block mt-0.5">${{ totalDiferencia() | number:'1.2-2' }}</span>
+      </div>
+    </div>
+
+    <!-- 1. Tabla de Liquidación Neta por Trabajador -->
+    <div>
+      <h3 class="text-xs font-black uppercase tracking-wider text-slate-900 border-b border-slate-300 pb-1 mb-2">
+        1. BALANCE INDIVIDUAL POR TRABAJADOR
+      </h3>
+      <table class="w-full text-xs">
+        <thead>
+          <tr>
+            <th class="text-left">TRABAJADOR</th>
+            <th class="text-center">FAENAS</th>
+            <th class="text-right">TOTAL GANADO</th>
+            <th class="text-right">YA PAGADO</th>
+            <th class="text-right">SALDO POR LIQUIDAR</th>
+            <th class="text-center">FIRMA CONFORME</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (res of resumenTrabajadores(); track res.id) {
+            <tr>
+              <td class="font-bold text-slate-900">{{ res.nombre }}</td>
+              <td class="text-center">{{ res.cantidad_faenas }}</td>
+              <td class="text-right font-mono">${{ res.total_ganado | number:'1.2-2' }}</td>
+              <td class="text-right font-mono">${{ res.total_pagado | number:'1.2-2' }}</td>
+              <td class="text-right font-mono font-black text-slate-900">${{ res.total_pendiente | number:'1.2-2' }}</td>
+              <td class="text-center text-slate-400 font-mono text-[8pt]">______________________</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+
+    <!-- 2. Detalle de Faenas -->
+    <div class="pt-2">
+      <h3 class="text-xs font-black uppercase tracking-wider text-slate-900 border-b border-slate-300 pb-1 mb-2">
+        2. DETALLE DE MOVIMIENTOS Y FAENAS DE PATIO
+      </h3>
+      <table class="w-full text-xs">
+        <thead>
+          <tr>
+            <th class="text-left"># REGISTRO</th>
+            <th class="text-left">FECHA</th>
+            <th class="text-left">TRABAJADOR</th>
+            <th class="text-left">OPERACIÓN</th>
+            <th class="text-left">DETALLE</th>
+            <th class="text-right">MONTO A COBRAR</th>
+            <th class="text-right">PAGADO / COBRADO</th>
+            <th class="text-right">SALDO</th>
+            <th class="text-center">ESTADO</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (t of turnosFiltrados(); track t.numero + t.trabajador + t.fecha) {
+            <tr>
+              <td class="font-mono font-bold">{{ t.numero }}</td>
+              <td class="font-mono text-[8.5pt]">{{ t.fecha }}</td>
+              <td class="font-bold">{{ t.trabajador }}</td>
+              <td>{{ t.tipo === 'DESCARGA' ? 'Bajada Madera' : 'Tráiler Boya' }}</td>
+              <td>{{ t.detalle }}</td>
+              <td class="text-right font-mono">${{ t.monto | number:'1.2-2' }}</td>
+              <td class="text-right font-mono">${{ t.montoPagado | number:'1.2-2' }}</td>
+              <td class="text-right font-mono font-bold">${{ t.montoPendiente | number:'1.2-2' }}</td>
+              <td class="text-center font-bold text-[8pt]">{{ t.estado | uppercase }}</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Firmas Legales -->
+    <div class="pt-12 mt-8 border-t border-slate-300">
+      <div class="grid grid-cols-2 gap-16 text-center text-xs">
+        <div>
+          <div class="border-t border-slate-900 mx-auto w-52 mb-1.5"></div>
+          <p class="font-bold text-slate-900">ADMINISTRACIÓN DE PATIO</p>
+          <p class="text-slate-500 text-[8pt]">Revisado y Aprobado</p>
+        </div>
+        <div>
+          <div class="border-t border-slate-900 mx-auto w-52 mb-1.5"></div>
+          <p class="font-bold text-slate-900">DELEGADO DE CUADRILLA</p>
+          <p class="text-slate-500 text-[8pt]">Recibido Conforme</p>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+</div>
