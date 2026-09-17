@@ -77,6 +77,20 @@ export class EmbarquesComponent {
     return this.embarquesFiltrados().reduce((acc, e) => acc + e.total_pago, 0);
   });
 
+  totalPendienteCuadrilla = computed(() => {
+    return this.embarquesFiltrados().reduce((acc, e) => {
+      const pend = e.trabajadores.filter(t => !t.pagado).reduce((sum, t) => sum + t.monto_individual, 0);
+      return acc + pend;
+    }, 0);
+  });
+
+  totalPagadoCuadrilla = computed(() => {
+    return this.embarquesFiltrados().reduce((acc, e) => {
+      const pag = e.trabajadores.filter(t => t.pagado).reduce((sum, t) => sum + t.monto_individual, 0);
+      return acc + pag;
+    }, 0);
+  });
+
   totalACobrar = computed(() => {
     return this.embarquesFiltrados().reduce((acc, e) => {
       const miDetalle = this.getMiDetalle(e);
