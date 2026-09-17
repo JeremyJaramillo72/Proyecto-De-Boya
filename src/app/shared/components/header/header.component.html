@@ -1,111 +1,113 @@
-<header class="bg-white/90 backdrop-blur-md border-b border-slate-200/80 sticky top-0 z-40 px-4 sm:px-6 h-16 flex items-center justify-between no-print transition-all">
-  
-  <!-- Izquierda: Marca Empresarial & Estado -->
-  <div class="flex items-center gap-3.5">
-    <a routerLink="/" class="flex items-center gap-3 group">
-      <div class="w-9 h-9 rounded-xl bg-slate-950 flex items-center justify-center text-white shadow-xs border border-slate-800 transition-transform group-hover:scale-105">
-        <svg class="w-5 h-5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
-        </svg>
-      </div>
-      <div>
-        <div class="flex items-center gap-2">
-          <span class="text-sm sm:text-base font-bold tracking-tight text-slate-900">BoyaControl</span>
-          <span class="hidden sm:inline-block text-[10px] font-semibold text-slate-400 uppercase tracking-widest px-1.5 py-0.5 rounded bg-slate-100">PRO</span>
-        </div>
-        <div class="flex items-center gap-1.5 -mt-0.5">
-          <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-          <span class="text-[11px] text-slate-500 font-medium tracking-tight">Patio 01 • En línea</span>
-        </div>
-      </div>
-    </a>
-  </div>
-
-  <!-- Centro: Navegación de Acceso Rápido (Apple Segmented Style) -->
-  <nav class="hidden xl:flex items-center gap-1 bg-slate-100/80 p-1 rounded-xl border border-slate-200/60">
-    <a routerLink="/dashboard" routerLinkActive="bg-white text-slate-900 shadow-xs font-semibold"
-      class="px-3 py-1.5 rounded-lg text-xs text-slate-600 hover:text-slate-900 transition-all flex items-center gap-1.5">
-      <svg class="w-3.5 h-3.5 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/>
-      </svg>
-      <span>Dashboard</span>
-    </a>
-
-    <a routerLink="/descargas" routerLinkActive="bg-white text-slate-900 shadow-xs font-semibold"
-      class="px-3 py-1.5 rounded-lg text-xs text-slate-600 hover:text-slate-900 transition-all flex items-center gap-1.5">
-      <svg class="w-3.5 h-3.5 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
-      </svg>
-      <span>Bajadas Madera</span>
-    </a>
-
-    <a routerLink="/embarques" routerLinkActive="bg-white text-slate-900 shadow-xs font-semibold"
-      class="px-3 py-1.5 rounded-lg text-xs text-slate-600 hover:text-slate-900 transition-all flex items-center gap-1.5">
-      <svg class="w-3.5 h-3.5 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17a2 2 0 11-4 0 2 2 0 014 0zM19 17a2 2 0 11-4 0 2 2 0 014 0z"/>
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h1m8-1a1 1 0 01-1 1H9m4-1V8a1 1 0 011-1h2.586a1 1 0 01.707.293l3.414 3.414a1 1 0 01.293.707V16a1 1 0 01-1 1h-1m-6-1a1 1 0 001 1h1M5 17a2 2 0 104 0m-4 0a2 2 0 114 0m6 0a2 2 0 104 0m-4 0a2 2 0 114 0"/>
-      </svg>
-      <span>Tráilers</span>
-    </a>
-
-    <a routerLink="/reportes" routerLinkActive="bg-white text-slate-900 shadow-xs font-semibold"
-      class="px-3 py-1.5 rounded-lg text-xs text-slate-600 hover:text-slate-900 transition-all flex items-center gap-1.5">
-      <svg class="w-3.5 h-3.5 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
-      </svg>
-      <span>Auditoría & Nómina</span>
-    </a>
-
-    <a routerLink="/trabajadores" routerLinkActive="bg-white text-slate-900 shadow-xs font-semibold"
-      class="px-3 py-1.5 rounded-lg text-xs text-slate-600 hover:text-slate-900 transition-all flex items-center gap-1.5">
-      <svg class="w-3.5 h-3.5 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/>
-      </svg>
-      <span>Personal</span>
-    </a>
-  </nav>
-
-  <!-- Derecha: Perfil de Usuario & Acciones -->
-  <div class="flex items-center gap-3">
+<header class="bg-white/90 backdrop-blur-md border-b border-slate-200/80 sticky top-0 z-40 px-4 sm:px-6 pt-safe flex flex-col justify-center no-print transition-all">
+  <div class="h-16 flex items-center justify-between w-full">
     
-    <!-- Acceso a Gestión de Usuarios (solo Admin) -->
-    @if (authService.esAdmin()) {
-      <a routerLink="/usuarios" routerLinkActive="bg-slate-900 text-white"
-        class="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-slate-200 text-slate-700 hover:bg-slate-50 text-xs font-semibold transition-all apple-btn-active">
-        <svg class="w-3.5 h-3.5 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
-        </svg>
-        <span>Usuarios</span>
-      </a>
-    }
-
-    <!-- Chip de Usuario con Avatar -->
-    <div class="flex items-center gap-2.5 pl-2 border-l border-slate-200/80">
-      <div class="w-8 h-8 rounded-xl bg-slate-900 text-white flex items-center justify-center font-bold text-xs shadow-xs">
-        {{ (authService.usuarioActual()?.nombre || 'J').charAt(0).toUpperCase() }}
-      </div>
-      <div class="hidden md:block text-left leading-tight">
-        <div class="text-xs font-bold text-slate-900 flex items-center gap-1.5">
-          <span>{{ authService.usuarioActual()?.nombre || 'Jeremy' }}</span>
-          <span class="text-[9px] font-bold px-1.5 py-0.2 rounded-full uppercase tracking-wider bg-slate-100 text-slate-600 border border-slate-200">
-            {{ authService.esAdmin() ? 'Admin' : 'Operador' }}
-          </span>
+    <!-- Izquierda: Marca Empresarial & Estado -->
+    <div class="flex items-center gap-3.5">
+      <a routerLink="/" class="flex items-center gap-3 group">
+        <div class="w-9 h-9 rounded-xl bg-slate-950 flex items-center justify-center text-white shadow-xs border border-slate-800 transition-transform group-hover:scale-105">
+          <svg class="w-5 h-5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
+          </svg>
         </div>
-        <p class="text-[10px] text-slate-400 font-medium">{{ authService.usuarioActual()?.usuario || 'jeremy' }}</p>
-      </div>
+        <div>
+          <div class="flex items-center gap-2">
+            <span class="text-sm sm:text-base font-bold tracking-tight text-slate-900">BoyaControl</span>
+            <span class="hidden sm:inline-block text-[10px] font-semibold text-slate-400 uppercase tracking-widest px-1.5 py-0.5 rounded bg-slate-100">PRO</span>
+          </div>
+          <div class="flex items-center gap-1.5 -mt-0.5">
+            <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+            <span class="text-[11px] text-slate-500 font-medium tracking-tight">Patio 01 • En línea</span>
+          </div>
+        </div>
+      </a>
     </div>
 
-    <!-- Botón Salir / Bloquear -->
-    <button (click)="authService.logout()"
-      title="Bloquear sesión"
-      class="p-2 sm:px-3 sm:py-1.5 rounded-xl border border-slate-200 hover:border-red-200 hover:bg-red-50 text-slate-500 hover:text-red-700 text-xs font-semibold transition-all apple-btn-active flex items-center gap-1.5 cursor-pointer">
-      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
-      </svg>
-      <span class="hidden sm:inline">Bloquear</span>
-    </button>
+    <!-- Centro: Navegación de Acceso Rápido (Apple Segmented Style) -->
+    <nav class="hidden xl:flex items-center gap-1 bg-slate-100/80 p-1 rounded-xl border border-slate-200/60">
+      <a routerLink="/dashboard" routerLinkActive="bg-white text-slate-900 shadow-xs font-semibold"
+        class="px-3 py-1.5 rounded-lg text-xs text-slate-600 hover:text-slate-900 transition-all flex items-center gap-1.5">
+        <svg class="w-3.5 h-3.5 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"/>
+        </svg>
+        <span>Dashboard</span>
+      </a>
+
+      <a routerLink="/descargas" routerLinkActive="bg-white text-slate-900 shadow-xs font-semibold"
+        class="px-3 py-1.5 rounded-lg text-xs text-slate-600 hover:text-slate-900 transition-all flex items-center gap-1.5">
+        <svg class="w-3.5 h-3.5 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
+        </svg>
+        <span>Bajadas Madera</span>
+      </a>
+
+      <a routerLink="/embarques" routerLinkActive="bg-white text-slate-900 shadow-xs font-semibold"
+        class="px-3 py-1.5 rounded-lg text-xs text-slate-600 hover:text-slate-900 transition-all flex items-center gap-1.5">
+        <svg class="w-3.5 h-3.5 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17a2 2 0 11-4 0 2 2 0 014 0zM19 17a2 2 0 11-4 0 2 2 0 014 0z"/>
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h1m8-1a1 1 0 01-1 1H9m4-1V8a1 1 0 011-1h2.586a1 1 0 01.707.293l3.414 3.414a1 1 0 01.293.707V16a1 1 0 01-1 1h-1m-6-1a1 1 0 001 1h1M5 17a2 2 0 104 0m-4 0a2 2 0 114 0m6 0a2 2 0 104 0m-4 0a2 2 0 114 0"/>
+        </svg>
+        <span>Tráilers</span>
+      </a>
+
+      <a routerLink="/reportes" routerLinkActive="bg-white text-slate-900 shadow-xs font-semibold"
+        class="px-3 py-1.5 rounded-lg text-xs text-slate-600 hover:text-slate-900 transition-all flex items-center gap-1.5">
+        <svg class="w-3.5 h-3.5 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+        </svg>
+        <span>Auditoría & Nómina</span>
+      </a>
+
+      <a routerLink="/trabajadores" routerLinkActive="bg-white text-slate-900 shadow-xs font-semibold"
+        class="px-3 py-1.5 rounded-lg text-xs text-slate-600 hover:text-slate-900 transition-all flex items-center gap-1.5">
+        <svg class="w-3.5 h-3.5 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/>
+        </svg>
+        <span>Personal</span>
+      </a>
+    </nav>
+
+    <!-- Derecha: Perfil de Usuario & Acciones -->
+    <div class="flex items-center gap-3">
+      
+      <!-- Acceso a Gestión de Usuarios (solo Admin) -->
+      @if (authService.esAdmin()) {
+        <a routerLink="/usuarios" routerLinkActive="bg-slate-900 text-white"
+          class="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-slate-200 text-slate-700 hover:bg-slate-50 text-xs font-semibold transition-all apple-btn-active">
+          <svg class="w-3.5 h-3.5 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/>
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+          </svg>
+          <span>Usuarios</span>
+        </a>
+      }
+
+      <!-- Chip de Usuario con Avatar -->
+      <div class="flex items-center gap-2.5 pl-2 border-l border-slate-200/80">
+        <div class="w-8 h-8 rounded-xl bg-slate-900 text-white flex items-center justify-center font-bold text-xs shadow-xs">
+          {{ (authService.usuarioActual()?.nombre || 'J').charAt(0).toUpperCase() }}
+        </div>
+        <div class="hidden md:block text-left leading-tight">
+          <div class="text-xs font-bold text-slate-900 flex items-center gap-1.5">
+            <span>{{ authService.usuarioActual()?.nombre || 'Jeremy' }}</span>
+            <span class="text-[9px] font-bold px-1.5 py-0.2 rounded-full uppercase tracking-wider bg-slate-100 text-slate-600 border border-slate-200">
+              {{ authService.esAdmin() ? 'Admin' : 'Operador' }}
+            </span>
+          </div>
+          <p class="text-[10px] text-slate-400 font-medium">{{ authService.usuarioActual()?.usuario || 'jeremy' }}</p>
+        </div>
+      </div>
+
+      <!-- Botón Salir / Bloquear -->
+      <button (click)="authService.logout()"
+        title="Bloquear sesión"
+        class="p-2 sm:px-3 sm:py-1.5 rounded-xl border border-slate-200 hover:border-red-200 hover:bg-red-50 text-slate-500 hover:text-red-700 text-xs font-semibold transition-all apple-btn-active flex items-center gap-1.5 cursor-pointer">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
+        </svg>
+        <span class="hidden sm:inline">Bloquear</span>
+      </button>
+
+    </div>
 
   </div>
-
 </header>

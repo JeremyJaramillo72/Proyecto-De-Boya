@@ -60,9 +60,26 @@
   }
 }
 
+/* Soporte de notch / Dynamic Island / Status bar superior de iPhone */
+.pt-safe {
+  padding-top: env(safe-area-inset-top, 0px);
+}
+
+@media all and (display-mode: standalone) {
+  .pt-safe {
+    padding-top: max(env(safe-area-inset-top, 0px), 3rem);
+  }
+}
+
 /* Soporte de notch / barra inferior de iPhone */
 .pb-safe {
   padding-bottom: calc(0.75rem + env(safe-area-inset-bottom, 0px));
+}
+
+@media all and (display-mode: standalone) {
+  .pb-safe {
+    padding-bottom: calc(0.75rem + max(env(safe-area-inset-bottom, 0px), 1.25rem));
+  }
 }
 
 /* Estilos de impresión para comprobantes y reportes PDF */
