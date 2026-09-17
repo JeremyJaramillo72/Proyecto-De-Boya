@@ -1,15 +1,32 @@
-<div class="min-h-[calc(100vh-4rem)] flex items-center justify-center p-4 sm:p-6">
-  <div class="w-full max-w-md bg-white rounded-3xl border border-slate-200/90 shadow-xl p-6 sm:p-8 space-y-6 animate-scale-in">
+<div class="relative min-h-screen w-full flex items-center justify-center p-4 sm:p-6 bg-slate-950 overflow-hidden">
+  
+  <!-- Imagen de Fondo Panorámica de Patio de Boya -->
+  <div class="absolute inset-0 bg-cover bg-center bg-no-repeat scale-105 transform transition-transform duration-1000 ease-out"
+       style="background-image: url('/balsa-bg.jpg');">
+  </div>
+
+  <!-- Capa de Gradiente y Viñeta Cinemática -->
+  <div class="absolute inset-0 bg-gradient-to-t from-slate-950/90 via-slate-950/70 to-slate-900/60 backdrop-blur-[2px]"></div>
+
+  <!-- Tarjeta Central con Glassmorphism Corporativo -->
+  <div class="relative z-10 w-full max-w-md bg-white/95 backdrop-blur-xl rounded-3xl border border-white/60 shadow-[0_20px_50px_rgba(0,0,0,0.4)] p-6 sm:p-8 space-y-6 animate-scale-in">
     
-    <!-- Encabezado con Logo BoyaControl -->
+    <!-- Encabezado con Logo BoyaControl PRO -->
     <div class="text-center space-y-2">
-      <div class="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-tr from-slate-950 via-slate-900 to-slate-800 text-white text-2xl shadow-md border border-slate-700/50 mb-1">
-        🪵
+      <div class="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-gradient-to-br from-slate-900 to-slate-950 text-amber-400 shadow-md border border-slate-700/40 mb-1">
+        <svg class="w-7 h-7" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
+          <polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline>
+          <line x1="12" y1="22.08" x2="12" y2="12"></line>
+        </svg>
       </div>
       <div>
-        <h1 class="text-2xl font-black tracking-tight text-slate-900">BoyaControl</h1>
-        <p class="text-xs font-bold text-slate-400 uppercase tracking-widest mt-0.5">
-          Patio 01 • Sistema de Madera y Tráilers
+        <div class="flex items-center justify-center gap-1.5">
+          <h1 class="text-2xl font-black tracking-tight text-slate-900">BoyaControl</h1>
+          <span class="px-1.5 py-0.5 text-[10px] font-black uppercase tracking-wider bg-slate-900 text-amber-400 rounded-md">PRO</span>
+        </div>
+        <p class="text-[11px] font-bold text-slate-400 uppercase tracking-widest mt-1">
+          Patio 01 • Logística de Madera y Tráilers
         </p>
       </div>
       <p class="text-xs text-slate-500 font-medium">
@@ -27,36 +44,52 @@
         (click)="cambiarModo('login')"
         [class.bg-white]="modo() === 'login'"
         [class.text-slate-900]="modo() === 'login'"
-        [class.shadow-sm]="modo() === 'login'"
+        [class.shadow-xs]="modo() === 'login'"
         [class.text-slate-500]="modo() !== 'login'"
-        class="py-2.5 px-3 rounded-xl transition-all duration-200 flex items-center justify-center gap-1.5 cursor-pointer">
-        <span>🔑</span>
+        class="py-2.5 px-3 rounded-xl transition-all duration-200 flex items-center justify-center gap-2 cursor-pointer">
+        <svg class="w-4 h-4 text-slate-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="7.5" cy="15.5" r="5.5"></circle>
+          <path d="m21 2-9.6 9.6"></path>
+          <path d="m15.5 7.5 3 3L22 7l-3-3"></path>
+        </svg>
         <span>Iniciar Sesión</span>
       </button>
       <button type="button" 
         (click)="cambiarModo('registro')"
         [class.bg-white]="modo() === 'registro'"
         [class.text-slate-900]="modo() === 'registro'"
-        [class.shadow-sm]="modo() === 'registro'"
+        [class.shadow-xs]="modo() === 'registro'"
         [class.text-slate-500]="modo() !== 'registro'"
-        class="py-2.5 px-3 rounded-xl transition-all duration-200 flex items-center justify-center gap-1.5 cursor-pointer">
-        <span>📝</span>
+        class="py-2.5 px-3 rounded-xl transition-all duration-200 flex items-center justify-center gap-2 cursor-pointer">
+        <svg class="w-4 h-4 text-slate-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path>
+          <circle cx="9" cy="7" r="4"></circle>
+          <line x1="19" y1="8" x2="19" y2="14"></line>
+          <line x1="22" y1="11" x2="16" y2="11"></line>
+        </svg>
         <span>Crear Cuenta</span>
       </button>
     </div>
 
     <!-- Mensaje de Error (si hay) -->
     @if (mensajeError()) {
-      <div class="p-3.5 rounded-2xl bg-red-50 border border-red-200 text-red-700 text-xs font-bold flex items-center gap-2 animate-fade-in">
-        <span class="text-base">⚠️</span>
+      <div class="p-3 rounded-xl bg-red-50 border border-red-200/80 text-red-700 text-xs font-semibold flex items-center gap-2 animate-fade-in">
+        <svg class="w-4 h-4 shrink-0 text-red-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10"></circle>
+          <line x1="12" y1="8" x2="12" y2="12"></line>
+          <line x1="12" y1="16" x2="12.01" y2="16"></line>
+        </svg>
         <span>{{ mensajeError() }}</span>
       </div>
     }
 
     <!-- Mensaje de Éxito (si hay) -->
     @if (mensajeExito()) {
-      <div class="p-3.5 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-bold flex items-center gap-2 animate-fade-in">
-        <span class="text-base">✅</span>
+      <div class="p-3 rounded-xl bg-emerald-50 border border-emerald-200/80 text-emerald-800 text-xs font-semibold flex items-center gap-2 animate-fade-in">
+        <svg class="w-4 h-4 shrink-0 text-emerald-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+          <polyline points="22 4 12 14.01 9 11.01"></polyline>
+        </svg>
         <span>{{ mensajeExito() }}</span>
       </div>
     }
@@ -67,62 +100,88 @@
         
         <!-- Campo Usuario -->
         <div class="space-y-1.5">
-          <label class="block text-[11px] font-black uppercase tracking-wider text-slate-600">
+          <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-600">
             Usuario
           </label>
           <div class="relative">
-            <span class="absolute left-3.5 top-3 text-slate-400 text-sm">👤</span>
+            <span class="absolute left-3.5 top-3 text-slate-400">
+              <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path>
+                <circle cx="12" cy="7" r="4"></circle>
+              </svg>
+            </span>
             <input type="text"
               [(ngModel)]="usuario"
               name="usuario"
               required
               autocomplete="username"
-              placeholder="Ej: Carlos"
-              class="w-full pl-10 pr-3.5 py-2.5 bg-slate-50 border border-slate-200/90 rounded-xl text-xs sm:text-sm text-slate-900 font-bold focus:bg-white focus:outline-none min-h-[44px] transition-all" />
+              placeholder="Ej: Jeremy"
+              class="w-full pl-10 pr-3.5 py-2.5 bg-slate-50/80 border border-slate-200/90 rounded-xl text-xs sm:text-sm text-slate-900 font-bold focus:bg-white focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-400 min-h-[44px] transition-all" />
           </div>
         </div>
 
         <!-- Campo Contraseña -->
         <div class="space-y-1.5">
           <div class="flex items-center justify-between">
-            <label class="block text-[11px] font-black uppercase tracking-wider text-slate-600">
+            <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-600">
               Contraseña
             </label>
           </div>
           <div class="relative">
-            <span class="absolute left-3.5 top-3 text-slate-400 text-sm">🔒</span>
+            <span class="absolute left-3.5 top-3 text-slate-400">
+              <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+                <rect width="18" height="11" x="3" y="11" rx="2" ry="2"></rect>
+                <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+              </svg>
+            </span>
             <input [type]="mostrarPassword() ? 'text' : 'password'"
               [(ngModel)]="password"
               name="password"
               required
               autocomplete="current-password"
               placeholder="Ingresa tu contraseña"
-              class="w-full pl-10 pr-11 py-2.5 bg-slate-50 border border-slate-200/90 rounded-xl text-xs sm:text-sm text-slate-900 font-bold focus:bg-white focus:outline-none min-h-[44px] transition-all" />
+              class="w-full pl-10 pr-11 py-2.5 bg-slate-50/80 border border-slate-200/90 rounded-xl text-xs sm:text-sm text-slate-900 font-bold focus:bg-white focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-400 min-h-[44px] transition-all" />
             
             <button type="button" (click)="mostrarPassword.set(!mostrarPassword())"
-              class="absolute right-3 top-2.5 text-slate-400 hover:text-slate-700 p-1 text-xs font-bold transition-colors">
-              {{ mostrarPassword() ? '🙈' : '👁️' }}
+              class="absolute right-3 top-2.5 text-slate-400 hover:text-slate-700 p-1 transition-colors cursor-pointer"
+              [attr.aria-label]="mostrarPassword() ? 'Ocultar contraseña' : 'Ver contraseña'">
+              @if (mostrarPassword()) {
+                <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="m2 2 20 20"></path>
+                  <path d="M9.88 9.88a3 3 0 1 0 4.24 4.24"></path>
+                  <path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68"></path>
+                  <path d="M6.61 6.61A13.526 13.526 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61"></path>
+                </svg>
+              } @else {
+                <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"></path>
+                  <circle cx="12" cy="12" r="3"></circle>
+                </svg>
+              }
             </button>
           </div>
         </div>
 
         <!-- Botón Iniciar Sesión -->
         <button type="submit" [disabled]="cargando()"
-          class="w-full py-3 px-4 rounded-xl bg-[#0f172a] hover:bg-black text-white text-xs sm:text-sm font-bold shadow-md transition-all apple-btn-active min-h-[46px] flex items-center justify-center gap-2 mt-2 cursor-pointer disabled:opacity-50">
+          class="w-full py-3 px-4 rounded-xl bg-[#0f172a] hover:bg-slate-900 text-white text-xs sm:text-sm font-bold shadow-md hover:shadow-lg transition-all min-h-[46px] flex items-center justify-center gap-2 mt-2 cursor-pointer disabled:opacity-50">
           @if (cargando()) {
             <span class="inline-block w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
-            <span>Verificando...</span>
+            <span>Verificando credenciales...</span>
           } @else {
             <span>Iniciar Sesión</span>
-            <span>→</span>
+            <svg class="w-4 h-4 text-slate-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M5 12h14"></path>
+              <path d="m12 5 7 7-7 7"></path>
+            </svg>
           }
         </button>
 
         <!-- Switch a Registro -->
         <div class="text-center pt-1">
           <button type="button" (click)="cambiarModo('registro')"
-            class="text-xs text-slate-500 hover:text-slate-800 font-bold underline cursor-pointer transition-colors">
-            ¿No tienes una cuenta aún? Regístrate aquí
+            class="text-xs text-slate-500 hover:text-slate-900 font-semibold cursor-pointer transition-colors">
+            ¿No tienes una cuenta aún? <span class="underline">Regístrate aquí</span>
           </button>
         </div>
 
@@ -135,104 +194,154 @@
         
         <!-- Nombre Completo -->
         <div class="space-y-1.5">
-          <label class="block text-[11px] font-black uppercase tracking-wider text-slate-600">
+          <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-600">
             Nombre Completo
           </label>
           <div class="relative">
-            <span class="absolute left-3.5 top-3 text-slate-400 text-sm">🏷️</span>
+            <span class="absolute left-3.5 top-3 text-slate-400">
+              <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 2H2v10l9.29 9.29c.94.94 2.48.94 3.42 0l6.58-6.58c.94-.94.94-2.48 0-3.42L12 2Z"></path>
+                <path d="M7 7h.01"></path>
+              </svg>
+            </span>
             <input type="text"
               [(ngModel)]="regNombre"
               name="regNombre"
               required
               placeholder="Ej: Carlos Silva"
-              class="w-full pl-10 pr-3.5 py-2.5 bg-slate-50 border border-slate-200/90 rounded-xl text-xs sm:text-sm text-slate-900 font-bold focus:bg-white focus:outline-none min-h-[44px] transition-all" />
+              class="w-full pl-10 pr-3.5 py-2.5 bg-slate-50/80 border border-slate-200/90 rounded-xl text-xs sm:text-sm text-slate-900 font-bold focus:bg-white focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-400 min-h-[44px] transition-all" />
           </div>
         </div>
 
         <!-- Nombre de Usuario -->
         <div class="space-y-1.5">
-          <label class="block text-[11px] font-black uppercase tracking-wider text-slate-600">
-            Nombre de Usuario (Para iniciar sesión)
+          <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-600">
+            Nombre de Usuario
           </label>
           <div class="relative">
-            <span class="absolute left-3.5 top-3 text-slate-400 text-sm">👤</span>
+            <span class="absolute left-3.5 top-3 text-slate-400">
+              <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path>
+                <circle cx="12" cy="7" r="4"></circle>
+              </svg>
+            </span>
             <input type="text"
               [(ngModel)]="regUsuario"
               name="regUsuario"
               required
               autocomplete="username"
               placeholder="Ej: carloss"
-              class="w-full pl-10 pr-3.5 py-2.5 bg-slate-50 border border-slate-200/90 rounded-xl text-xs sm:text-sm text-slate-900 font-bold focus:bg-white focus:outline-none min-h-[44px] transition-all" />
+              class="w-full pl-10 pr-3.5 py-2.5 bg-slate-50/80 border border-slate-200/90 rounded-xl text-xs sm:text-sm text-slate-900 font-bold focus:bg-white focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-400 min-h-[44px] transition-all" />
           </div>
         </div>
 
         <!-- Contraseña -->
         <div class="space-y-1.5">
-          <label class="block text-[11px] font-black uppercase tracking-wider text-slate-600">
+          <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-600">
             Contraseña
           </label>
           <div class="relative">
-            <span class="absolute left-3.5 top-3 text-slate-400 text-sm">🔒</span>
+            <span class="absolute left-3.5 top-3 text-slate-400">
+              <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+                <rect width="18" height="11" x="3" y="11" rx="2" ry="2"></rect>
+                <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+              </svg>
+            </span>
             <input [type]="mostrarRegPassword() ? 'text' : 'password'"
               [(ngModel)]="regPassword"
               name="regPassword"
               required
               autocomplete="new-password"
               placeholder="Mínimo 3 caracteres"
-              class="w-full pl-10 pr-11 py-2.5 bg-slate-50 border border-slate-200/90 rounded-xl text-xs sm:text-sm text-slate-900 font-bold focus:bg-white focus:outline-none min-h-[44px] transition-all" />
+              class="w-full pl-10 pr-11 py-2.5 bg-slate-50/80 border border-slate-200/90 rounded-xl text-xs sm:text-sm text-slate-900 font-bold focus:bg-white focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-400 min-h-[44px] transition-all" />
             
             <button type="button" (click)="mostrarRegPassword.set(!mostrarRegPassword())"
-              class="absolute right-3 top-2.5 text-slate-400 hover:text-slate-700 p-1 text-xs font-bold transition-colors">
-              {{ mostrarRegPassword() ? '🙈' : '👁️' }}
+              class="absolute right-3 top-2.5 text-slate-400 hover:text-slate-700 p-1 transition-colors cursor-pointer"
+              [attr.aria-label]="mostrarRegPassword() ? 'Ocultar contraseña' : 'Ver contraseña'">
+              @if (mostrarRegPassword()) {
+                <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="m2 2 20 20"></path>
+                  <path d="M9.88 9.88a3 3 0 1 0 4.24 4.24"></path>
+                  <path d="M10.73 5.08A10.43 10.43 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68"></path>
+                  <path d="M6.61 6.61A13.526 13.526 0 0 0 2 12s3 7 10 7a9.74 9.74 0 0 0 5.39-1.61"></path>
+                </svg>
+              } @else {
+                <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"></path>
+                  <circle cx="12" cy="12" r="3"></circle>
+                </svg>
+              }
             </button>
           </div>
         </div>
 
         <!-- Confirmar Contraseña -->
         <div class="space-y-1.5">
-          <label class="block text-[11px] font-black uppercase tracking-wider text-slate-600">
+          <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-600">
             Confirmar Contraseña
           </label>
           <div class="relative">
-            <span class="absolute left-3.5 top-3 text-slate-400 text-sm">🔒</span>
+            <span class="absolute left-3.5 top-3 text-slate-400">
+              <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+                <rect width="18" height="11" x="3" y="11" rx="2" ry="2"></rect>
+                <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+              </svg>
+            </span>
             <input [type]="mostrarRegPassword() ? 'text' : 'password'"
               [(ngModel)]="regPasswordConfirmacion"
               name="regPasswordConfirmacion"
               required
               autocomplete="new-password"
               placeholder="Repite tu contraseña"
-              class="w-full pl-10 pr-3.5 py-2.5 bg-slate-50 border border-slate-200/90 rounded-xl text-xs sm:text-sm text-slate-900 font-bold focus:bg-white focus:outline-none min-h-[44px] transition-all" />
+              class="w-full pl-10 pr-3.5 py-2.5 bg-slate-50/80 border border-slate-200/90 rounded-xl text-xs sm:text-sm text-slate-900 font-bold focus:bg-white focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-400 min-h-[44px] transition-all" />
           </div>
         </div>
 
         <!-- Nota Informativa Rol Usuario -->
-        <div class="p-3 bg-blue-50/70 border border-blue-200/70 rounded-xl text-[11px] text-blue-800 flex items-start gap-2">
-          <span class="text-sm shrink-0">ℹ️</span>
-          <span>Tu cuenta se creará con rol de <strong>Usuario</strong>, lo que te permitirá llevar el control directo de tus faenas y ganancias individuales.</span>
+        <div class="p-3 bg-slate-50 border border-slate-200/70 rounded-xl text-[11px] text-slate-600 flex items-start gap-2.5">
+          <svg class="w-4 h-4 text-slate-500 shrink-0 mt-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"></circle>
+            <line x1="12" y1="16" x2="12" y2="12"></line>
+            <line x1="12" y1="8" x2="12.01" y2="8"></line>
+          </svg>
+          <span>Tu cuenta se registrará con rol de <strong>Operador</strong> para gestionar tus registros y verificar tus pagos.</span>
         </div>
 
         <!-- Botón Registrarse -->
         <button type="submit" [disabled]="cargando()"
-          class="w-full py-3 px-4 rounded-xl bg-[#0f172a] hover:bg-black text-white text-xs sm:text-sm font-bold shadow-md transition-all apple-btn-active min-h-[46px] flex items-center justify-center gap-2 mt-2 cursor-pointer disabled:opacity-50">
+          class="w-full py-3 px-4 rounded-xl bg-[#0f172a] hover:bg-slate-900 text-white text-xs sm:text-sm font-bold shadow-md hover:shadow-lg transition-all min-h-[46px] flex items-center justify-center gap-2 mt-2 cursor-pointer disabled:opacity-50">
           @if (cargando()) {
             <span class="inline-block w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
             <span>Creando cuenta...</span>
           } @else {
             <span>Crear Cuenta y Entrar</span>
-            <span>→</span>
+            <svg class="w-4 h-4 text-slate-300" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M5 12h14"></path>
+              <path d="m12 5 7 7-7 7"></path>
+            </svg>
           }
         </button>
 
         <!-- Switch a Login -->
         <div class="text-center pt-1">
           <button type="button" (click)="cambiarModo('login')"
-            class="text-xs text-slate-500 hover:text-slate-800 font-bold underline cursor-pointer transition-colors">
-            ¿Ya tienes una cuenta? Inicia sesión aquí
+            class="text-xs text-slate-500 hover:text-slate-900 font-semibold cursor-pointer transition-colors">
+            ¿Ya tienes una cuenta? <span class="underline">Inicia sesión aquí</span>
           </button>
         </div>
 
       </form>
     }
 
+    <!-- Pie de Seguridad Corporativo -->
+    <div class="pt-2 border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-400 font-medium">
+      <span class="flex items-center gap-1.5">
+        <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+        <span>PostgreSQL Cloud Activo</span>
+      </span>
+      <span>v2.0 PRO</span>
+    </div>
+
   </div>
 </div>
+
