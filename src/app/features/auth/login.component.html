@@ -1,12 +1,12 @@
 <div class="relative min-h-screen w-full flex items-center justify-center p-4 sm:p-6 bg-slate-950 overflow-hidden">
   
-  <!-- Imagen de Fondo Panorámica de Patio de Boya -->
-  <div class="absolute inset-0 bg-cover bg-center bg-no-repeat scale-105 transform transition-transform duration-1000 ease-out"
+  <!-- Imagen de Fondo Panorámica de Patio de Boya en toda la pantalla (100% viewport) -->
+  <div class="fixed inset-0 w-full h-full bg-cover bg-center bg-no-repeat pointer-events-none"
        style="background-image: url('/balsa-bg.jpg');">
   </div>
 
-  <!-- Capa de Gradiente y Viñeta Cinemática -->
-  <div class="absolute inset-0 bg-gradient-to-t from-slate-950/90 via-slate-950/70 to-slate-900/60 backdrop-blur-[2px]"></div>
+  <!-- Capa de Gradiente y Viñeta Cinemática Full-Screen -->
+  <div class="fixed inset-0 w-full h-full bg-gradient-to-t from-slate-950/90 via-slate-950/70 to-slate-900/60 backdrop-blur-[2px] pointer-events-none"></div>
 
   <!-- Tarjeta Central con Glassmorphism Corporativo -->
   <div class="relative z-10 w-full max-w-md bg-white/95 backdrop-blur-xl rounded-3xl border border-white/60 shadow-[0_20px_50px_rgba(0,0,0,0.4)] p-6 sm:p-8 space-y-6 animate-scale-in">
