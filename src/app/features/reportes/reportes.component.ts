@@ -17,7 +17,7 @@ export interface FaenaAuditoria {
   pagado: boolean;
   montoPagado: number;
   montoPendiente: number;
-  estado: 'Por Liquidar' | 'Pagado';
+  estado: 'Por Liquidar' | 'Pagado' | 'Pago Chofer';
   operacionId: string;
 }
 
@@ -130,6 +130,8 @@ export class ReportesComponent {
     const embarques = this.dataService.misEmbarques();
     const lista: FaenaAuditoria[] = [];
 
+    const esAdmin = this.authService.esAdmin();
+
     // 1. Transformamos faenas de descarga de madera
     descargas.forEach((d, dIdx) => {
       const cantPers = Math.max(d.trabajadores.length, 1);
@@ -144,10 +146,10 @@ export class ReportesComponent {
           detalle: `${d.cantidad_carros} Carro(s) • ${d.filas_por_carro} filas ($${d.total_pago.toFixed(2)} total ÷ ${cantPers} pers.)`,
           observaciones: d.observaciones,
           monto: t.monto_individual,
-          pagado: t.pagado,
-          montoPagado: t.pagado ? t.monto_individual : 0,
-          montoPendiente: t.pagado ? 0 : t.monto_individual,
-          estado: t.pagado ? 'Pagado' : 'Por Liquidar',
+          pagado: esAdmin ? true : t.pagado,
+          montoPagado: esAdmin ? 0 : (t.pagado ? t.monto_individual : 0),
+          montoPendiente: esAdmin ? 0 : (t.pagado ? 0 : t.monto_individual),
+          estado: esAdmin ? 'Pago Chofer' : (t.pagado ? 'Pagado' : 'Por Liquidar'),
           operacionId: d.id
         });
       });
@@ -163,7 +165,7 @@ export class ReportesComponent {
           trabajadorId: t.trabajador_id,
           fecha: e.fecha,
           tipo: 'EMBARQUE',
-          detalle: `${e.cantidad_trailers} Tráiler(s) de Bloques`,
+          detalle: `${e.cantidad_trailers} Tráiler(s) de Bloques ($7.00/pers)`,
           observaciones: e.observaciones,
           monto: t.monto_individual,
           pagado: t.pagado,
@@ -193,6 +195,11 @@ export class ReportesComponent {
         }
       }
 
+      // Si es Admin y se busca a un empleado/trabajador en particular, mostrar exclusivamente sus tráilers
+      if (esAdmin && emp && item.tipo === 'DESCARGA') {
+        return false;
+      }
+
       // Filtro por tipo de operación (DESCARGA vs EMBARQUE)
       if (tipoOp !== 'TODOS' && item.tipo !== tipoOp) return false;
 
@@ -204,12 +211,11 @@ export class ReportesComponent {
 
       // Búsqueda en vivo por texto (Trabajador, número de faena, detalle, notas)
       if (texto) {
-        const matchTrab = item.trabajador.toLowerCase().includes(texto);
-        const matchNum = item.numero.toLowerCase().includes(texto);
+        const matchTrabajador = item.trabajador.toLowerCase().includes(texto);
+        const matchNumero = item.numero.toLowerCase().includes(texto);
         const matchDetalle = item.detalle.toLowerCase().includes(texto);
-        const matchObs = (item.observaciones || '').toLowerCase().includes(texto);
-        const matchTipo = (item.tipo === 'DESCARGA' ? 'bajada madera carro' : 'trailer boya embarque bloque').includes(texto);
-        if (!matchTrab && !matchNum && !matchDetalle && !matchObs && !matchTipo) return false;
+        const matchObs = item.observaciones ? item.observaciones.toLowerCase().includes(texto) : false;
+        if (!matchTrabajador && !matchNumero && !matchDetalle && !matchObs) return false;
       }
 
       // Empleado dropdown / query param (búsqueda normalizada insensible a mayúsculas, tildes o coincidencia por ID)
@@ -234,21 +240,35 @@ export class ReportesComponent {
   });
 
   totalRecaudacion = computed(() => {
-    return this.turnosFiltrados().reduce((sum, t) => sum + t.monto, 0);
+    return this.turnosFiltrados().reduce((sum, t) => {
+      if (this.authService.esAdmin() && t.tipo === 'DESCARGA') return sum;
+      return sum + t.monto;
+    }, 0);
   });
 
   totalDiferencia = computed(() => {
-    return this.turnosFiltrados().reduce((sum, t) => sum + t.montoPendiente, 0);
+    return this.turnosFiltrados().reduce((sum, t) => {
+      if (this.authService.esAdmin() && t.tipo === 'DESCARGA') return sum;
+      return sum + t.montoPendiente;
+    }, 0);
   });
 
   totalPagadoCalculado = computed(() => {
-    return this.turnosFiltrados().reduce((sum, t) => sum + t.montoPagado, 0);
+    return this.turnosFiltrados().reduce((sum, t) => {
+      if (this.authService.esAdmin() && t.tipo === 'DESCARGA') return sum;
+      return sum + t.montoPagado;
+    }, 0);
   });
 
   resumenTrabajadores = computed<ResumenTrabajador[]>(() => {
     const mapa = new Map<string, ResumenTrabajador>();
 
     for (const t of this.turnosFiltrados()) {
+      // Para el Admin, descargas de boya NO se suman a la cuenta de ninguna persona
+      if (this.authService.esAdmin() && t.tipo === 'DESCARGA') {
+        continue;
+      }
+
       if (!mapa.has(t.trabajadorId)) {
         mapa.set(t.trabajadorId, {
           id: t.trabajadorId,

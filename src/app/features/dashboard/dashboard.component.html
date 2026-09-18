@@ -93,15 +93,22 @@
       </div>
 
       <div class="mt-4">
-        <div class="text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight font-mono">
-          ${{ (authService.esAdmin() ? totalDescargasPatioTotal() : misDescargasCobrar()) | number:'1.2-2' }}
-        </div>
-        <div class="flex items-center justify-between text-xs text-slate-500 mt-1 font-medium">
-          <span>{{ misDescargasCount() }} faena(s) • {{ misCarrosCount() }} carro(s)</span>
-          @if (authService.esAdmin()) {
-            <span class="text-slate-400 font-normal">Pago de Choferes</span>
-          }
-        </div>
+        @if (authService.esAdmin()) {
+          <div class="text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight font-mono">
+            {{ misCarrosCount() }} <span class="text-sm font-medium text-slate-400">carros</span>
+          </div>
+          <div class="flex items-center justify-between text-xs text-slate-500 mt-1 font-medium">
+            <span>{{ misDescargasCount() }} faena(s) de bajada</span>
+            <span class="text-slate-400 font-normal">Pago Chofer</span>
+          </div>
+        } @else {
+          <div class="text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight font-mono">
+            ${{ misDescargasCobrar() | number:'1.2-2' }}
+          </div>
+          <div class="flex items-center justify-between text-xs text-slate-500 mt-1 font-medium">
+            <span>{{ misDescargasCount() }} faena(s) • {{ misCarrosCount() }} carro(s)</span>
+          </div>
+        }
       </div>
     </div>
 
@@ -240,7 +247,7 @@
                       {{ trab.nombre }}
                     </span>
                     <span class="text-[11px] text-slate-400 font-medium">
-                      {{ trab.cantidad_faenas }} faena(s) en patio
+                      {{ trab.cantidad_faenas }} {{ authService.esAdmin() ? 'tráiler(s)' : 'faena(s) en patio' }}
                     </span>
                   </div>
                 </div>
@@ -378,8 +385,8 @@
               <div class="text-right shrink-0">
                 <span class="font-bold text-slate-900 font-mono block">${{ op.monto | number:'1.2-2' }}</span>
                 <span class="inline-block text-[10px] font-bold px-1.5 py-0.2 rounded-md"
-                  [ngClass]="op.pagado ? 'bg-emerald-50 text-emerald-700 border border-emerald-200/60' : 'bg-amber-50 text-amber-700 border border-amber-200/60'">
-                  {{ op.pagado ? 'Pagado' : 'Pendiente' }}
+                  [ngClass]="(authService.esAdmin() && op.tipo === 'DESCARGA') ? 'bg-slate-100 text-slate-600 border border-slate-200/80' : (op.pagado ? 'bg-emerald-50 text-emerald-700 border border-emerald-200/60' : 'bg-amber-50 text-amber-700 border border-amber-200/60')">
+                  {{ (authService.esAdmin() && op.tipo === 'DESCARGA') ? 'Pago Chofer' : (op.pagado ? 'Pagado' : 'Pendiente') }}
                 </span>
               </div>
             </div>

@@ -157,22 +157,24 @@ export class TrabajadoresComponent {
     const embarques = this.dataService.misEmbarques();
     const resultado: FaenaTrabajadorItem[] = [];
 
-    // 1. Descargas (Bajadas de Madera)
-    for (const d of descargas) {
-      for (const dt of d.trabajadores || []) {
-        if (this.coincideTrabajador(t, dt)) {
-          resultado.push({
-            id: 'desc_' + d.id + '_' + dt.trabajador_id,
-            tipo: 'DESCARGA',
-            operacionId: d.id,
-            fecha: d.fecha,
-            titulo: 'Bajada de Madera',
-            detalle: `${d.cantidad_carros} Carro(s) • ${d.filas_por_carro} filas ($${d.total_pago.toFixed(2)} total ÷ ${Math.max(d.trabajadores.length, 1)} pers.)`,
-            observaciones: d.observaciones,
-            monto: dt.monto_individual,
-            pagado: dt.pagado,
-            trabajadorId: dt.trabajador_id
-          });
+    // 1. Descargas (Bajadas de Madera) - Para Admin NO se incluyen porque el chofer paga directamente y a Jeremy solo le interesan los tráilers
+    if (!this.authService.esAdmin()) {
+      for (const d of descargas) {
+        for (const dt of d.trabajadores || []) {
+          if (this.coincideTrabajador(t, dt)) {
+            resultado.push({
+              id: 'desc_' + d.id + '_' + dt.trabajador_id,
+              tipo: 'DESCARGA',
+              operacionId: d.id,
+              fecha: d.fecha,
+              titulo: 'Bajada de Madera',
+              detalle: `${d.cantidad_carros} Carro(s) • ${d.filas_por_carro} filas ($${d.total_pago.toFixed(2)} total ÷ ${Math.max(d.trabajadores.length, 1)} pers.)`,
+              observaciones: d.observaciones,
+              monto: dt.monto_individual,
+              pagado: dt.pagado,
+              trabajadorId: dt.trabajador_id
+            });
+          }
         }
       }
     }
