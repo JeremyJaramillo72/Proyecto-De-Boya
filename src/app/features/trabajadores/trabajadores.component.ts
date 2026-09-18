@@ -93,23 +93,33 @@ export class TrabajadoresComponent {
       let totalPagado = 0;
       let totalPendiente = 0;
       let cantidadFaenas = 0;
+      let cantidadDescargas = 0;
+      let cantidadTrailers = 0;
 
+      // 1. Descargas de madera (vehículos de boya):
+      // Para el ADMIN: Jeremy NO paga las bajadas de carros de boya (las paga el chofer/vehículo externo directamente).
+      // Por tanto, NO suman al saldo por liquidar ni a lo pagado por Jeremy.
       for (const d of descargas) {
         for (const dt of d.trabajadores || []) {
           if (this.coincideTrabajador(t, dt)) {
-            totalGanado += dt.monto_individual;
-            cantidadFaenas++;
-            if (dt.pagado) totalPagado += dt.monto_individual;
-            else totalPendiente += dt.monto_individual;
+            cantidadDescargas++;
+            if (!esAdmin) {
+              totalGanado += dt.monto_individual;
+              cantidadFaenas++;
+              if (dt.pagado) totalPagado += dt.monto_individual;
+              else totalPendiente += dt.monto_individual;
+            }
           }
         }
       }
 
+      // 2. Embarques de Tráilers (despachos de fábrica que Jeremy SÍ liquida y paga a la cuadrilla a $7/pers)
       for (const e of embarques) {
         for (const et of e.trabajadores || []) {
           if (this.coincideTrabajador(t, et)) {
-            totalGanado += et.monto_individual;
+            cantidadTrailers++;
             cantidadFaenas++;
+            totalGanado += et.monto_individual;
             if (et.pagado) totalPagado += et.monto_individual;
             else totalPendiente += et.monto_individual;
           }
@@ -131,7 +141,9 @@ export class TrabajadoresComponent {
         total_ganado: totalGanado,
         total_pagado: totalPagado,
         total_pendiente: totalPendiente,
-        cantidad_faenas: cantidadFaenas
+        cantidad_faenas: cantidadFaenas,
+        cantidad_descargas: cantidadDescargas,
+        cantidad_trailers: cantidadTrailers
       };
     }).sort((a, b) => b.total_pendiente - a.total_pendiente);
   });

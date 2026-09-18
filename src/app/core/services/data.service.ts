@@ -229,12 +229,10 @@ export class DataService {
     const esAdmin = this.authService.esAdmin();
     let pendiente = 0;
 
-    for (const d of this.misDescargas()) {
-      if (esAdmin) {
-        for (const t of d.trabajadores || []) {
-          if (!t.pagado) pendiente += Number(t.monto_individual || 0);
-        }
-      } else {
+    // Para el ADMIN: Jeremy NO paga las descargas de carros de boya (se pagan directamente por el vehículo/proveedor).
+    // Solo se suman las descargas si es un USUARIO individual consultando sus ingresos personales.
+    if (!esAdmin) {
+      for (const d of this.misDescargas()) {
         const trabs = d.trabajadores || [];
         const mi = trabs.find(t => this.authService.esMiTrabajador(t)) || (trabs.length > 0 ? trabs[0] : null);
         if (mi && !mi.pagado) {
@@ -243,6 +241,7 @@ export class DataService {
       }
     }
 
+    // Embarques de Tráilers (despachos de balsa a fábrica que Jeremy SÍ liquida a la cuadrilla a $7/pers)
     for (const e of this.misEmbarques()) {
       if (esAdmin) {
         for (const t of e.trabajadores || []) {
@@ -264,12 +263,8 @@ export class DataService {
     const esAdmin = this.authService.esAdmin();
     let pagado = 0;
 
-    for (const d of this.misDescargas()) {
-      if (esAdmin) {
-        for (const t of d.trabajadores || []) {
-          if (t.pagado) pagado += Number(t.monto_individual || 0);
-        }
-      } else {
+    if (!esAdmin) {
+      for (const d of this.misDescargas()) {
         const trabs = d.trabajadores || [];
         const mi = trabs.find(t => this.authService.esMiTrabajador(t)) || (trabs.length > 0 ? trabs[0] : null);
         if (mi && mi.pagado) {

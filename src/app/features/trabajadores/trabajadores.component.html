@@ -100,6 +100,13 @@
                       <span class="text-[10px] font-mono px-2 py-0.5 rounded-md bg-white border border-slate-200 text-slate-600 font-bold">
                         {{ f.fecha }}
                       </span>
+                      @if (authService.esAdmin()) {
+                        @if (f.tipo === 'DESCARGA') {
+                          <span class="text-[10px] px-1.5 py-0.5 rounded bg-slate-100 text-slate-500 font-medium">Vehículo Boya (Pago Externo)</span>
+                        } @else {
+                          <span class="text-[10px] px-1.5 py-0.5 rounded bg-emerald-50 text-emerald-700 font-semibold border border-emerald-200/60">Tráiler • Nómina Jeremy ($7.00)</span>
+                        }
+                      }
                     </div>
                     <p class="text-xs text-slate-500 font-medium mt-0.5">
                       {{ f.detalle }}
@@ -263,7 +270,7 @@
         {{ authService.esAdmin() ? 'Directorio de Cuadrilla & Personal' : 'Mi Personal & Cuadrilla' }}
       </h1>
       <p class="text-xs sm:text-sm text-slate-500 mt-0.5 font-medium">
-        {{ authService.esAdmin() ? 'Gestión de trabajadores de patio, jornales acumulados y saldos pendientes por liquidar.' : 'Mis ayudantes registrados, jornales acumulados y estado de cobro de mi cuadrilla.' }}
+        {{ authService.esAdmin() ? 'Gestión de cuadrilla y nómina por liquidar de tráilers de boya ($7.00/pers). Las bajadas de vehículos se pagan directamente por el vehículo.' : 'Mis ayudantes registrados, jornales acumulados y estado de cobro de mi cuadrilla.' }}
       </p>
     </div>
 
@@ -485,7 +492,11 @@
 
         <!-- Faenas y Acciones -->
         <div class="flex items-center justify-between text-xs text-slate-400 pt-1 font-medium">
-          <span>{{ item.cantidad_faenas }} faena(s) activas</span>
+          @if (authService.esAdmin()) {
+            <span>{{ item.cantidad_trailers }} tráiler(s) por liquidar</span>
+          } @else {
+            <span>{{ item.cantidad_faenas }} faena(s) activas</span>
+          }
 
           <div class="flex items-center gap-2">
             @if (puedeModificarTrabajador(item)) {

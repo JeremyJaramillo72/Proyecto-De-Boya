@@ -132,12 +132,14 @@ export class DashboardComponent implements OnInit, OnDestroy {
       mapa.set(t.id, { nombre: t.alias || t.nombre, total: 0, faenas: 0 });
     }
 
-    for (const d of descargas) {
-      for (const dt of d.trabajadores || []) {
-        const item = mapa.get(dt.trabajador_id);
-        if (item) {
-          item.total += dt.monto_individual;
-          item.faenas += 1;
+    if (!this.authService.esAdmin()) {
+      for (const d of descargas) {
+        for (const dt of d.trabajadores || []) {
+          const item = mapa.get(dt.trabajador_id);
+          if (item) {
+            item.total += dt.monto_individual;
+            item.faenas += 1;
+          }
         }
       }
     }
