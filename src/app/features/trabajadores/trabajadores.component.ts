@@ -47,13 +47,23 @@ export class TrabajadoresComponent {
   // TOAST DE NOTIFICACIÓN
   mensajeExito = signal<string>('');
 
+  // FILTRO DE VISTA PARA ADMIN: Cuadrilla Oficial de Patio vs Ayudantes de Usuarios
+  filtroCategoria = signal<'patio' | 'ayudantes' | 'todos'>('patio');
+
+  conteoPatio = computed(() => this.dataService.misTrabajadores().length);
+  conteoAyudantes = computed(() => this.dataService.ayudantesDeOtrosUsuarios().length);
+  conteoTodos = computed(() => this.dataService.todosLosTrabajadores().length);
+
   esMiTrabajador(t: { id?: string; nombre?: string; alias?: string; trabajador_id?: string; trabajador_nombre?: string }): boolean {
     return this.authService.esMiTrabajador(t);
   }
 
   coincideTrabajador(t: { id: string; nombre: string; alias?: string }, dt: { trabajador_id: string; trabajador_nombre?: string }): boolean {
-    if (dt.trabajador_id === t.id) return true;
-    if (this.authService.esMiTrabajador(t) && this.authService.esMiTrabajador(dt)) return true;
+    if (dt.trabajador_id && t.id) {
+      if (dt.trabajador_id === t.id) return true;
+      if (this.authService.esMiTrabajador(t) && this.authService.esMiTrabajador(dt)) return true;
+      return false;
+    }
     const tNom = t.nombre?.trim().toLowerCase();
     const tAlias = t.alias?.trim().toLowerCase();
     const dtNom = dt.trabajador_nombre?.trim().toLowerCase();
@@ -62,9 +72,19 @@ export class TrabajadoresComponent {
   }
 
   balancesTrabajadores = computed(() => {
-    // Usa misTrabajadores() para que el rol USUARIO vea su ficha y los trabajadores que él mismo agregó
-    // y el rol ADMIN vea a toda la cuadrilla
-    const lista = this.dataService.misTrabajadores();
+    const esAdmin = this.authService.esAdmin();
+    let lista = this.dataService.misTrabajadores();
+
+    if (esAdmin) {
+      if (this.filtroCategoria() === 'patio') {
+        lista = this.dataService.misTrabajadores();
+      } else if (this.filtroCategoria() === 'ayudantes') {
+        lista = this.dataService.ayudantesDeOtrosUsuarios();
+      } else {
+        lista = this.dataService.todosLosTrabajadores();
+      }
+    }
+
     const descargas = this.dataService.misDescargas();
     const embarques = this.dataService.misEmbarques();
 
@@ -96,11 +116,18 @@ export class TrabajadoresComponent {
         }
       }
 
+      const regUser = (t.usuario_creador || '').toLowerCase().trim();
+      const regId = (t.usuario_id || '').toLowerCase().trim();
+      const esPatio = (!regUser && !regId) || regUser === 'jeremy' || regId === 'usr_admin_jeremy';
+
       return {
         id: t.id,
         nombre: t.nombre,
         alias: t.alias || t.nombre,
         telefono: t.telefono,
+        usuario_id: t.usuario_id,
+        usuario_creador: t.usuario_creador,
+        esPatio,
         total_ganado: totalGanado,
         total_pagado: totalPagado,
         total_pendiente: totalPendiente,

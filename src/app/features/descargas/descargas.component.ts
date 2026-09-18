@@ -121,7 +121,7 @@ export class DescargasComponent {
   }
 
   seleccionarTrabajadorPorDefecto() {
-    const lista = this.dataService.misTrabajadores();
+    const lista = this.dataService.trabajadoresParaFaena();
     const miTrab = lista.find(t => this.authService.esMiTrabajador(t));
     if (miTrab) {
       this.seleccionadosIds.set([miTrab.id]);
@@ -237,7 +237,7 @@ export class DescargasComponent {
   }
 
   seleccionarTodosTrabajadores() {
-    this.seleccionadosIds.set(this.dataService.misTrabajadores().map(t => t.id));
+    this.seleccionadosIds.set(this.dataService.trabajadoresParaFaena().map(t => t.id));
   }
 
   limpiarSeleccionTrabajadores() {

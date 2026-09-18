@@ -197,7 +197,7 @@
         </div>
 
         <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-7 gap-2">
-          @for (t of dataService.misTrabajadores(); track t.id) {
+          @for (t of dataService.trabajadoresParaFaena(); track t.id) {
             <button type="button" (click)="toggleTrabajador(t.id)"
               class="p-2.5 rounded-xl text-xs font-semibold flex items-center justify-between border transition-all apple-btn-active min-h-[42px] cursor-pointer"
               [ngClass]="estaSeleccionado(t.id) ? 'bg-[#0f172a] border-[#0f172a] text-white shadow-xs' : 'bg-slate-50 border-slate-200/80 text-slate-700 hover:bg-slate-100'">

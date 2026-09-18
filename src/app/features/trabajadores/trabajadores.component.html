@@ -292,6 +292,53 @@
     </div>
   </div>
 
+  <!-- SELECTOR DE VISTA PARA ADMINISTRADOR: Cuadrilla Oficial de Patio vs Ayudantes de Usuarios -->
+  @if (authService.esAdmin()) {
+    <div class="flex flex-wrap items-center justify-between gap-3 pt-1">
+      <div class="flex items-center gap-1 p-1 bg-slate-100/90 rounded-2xl border border-slate-200/80 text-xs font-semibold">
+        <button type="button" (click)="filtroCategoria.set('patio')"
+          class="px-3 py-1.5 rounded-xl transition-all flex items-center gap-1.5 cursor-pointer"
+          [ngClass]="filtroCategoria() === 'patio' ? 'bg-white text-slate-900 shadow-2xs font-bold' : 'text-slate-500 hover:text-slate-800'">
+          <span>⭐ Mi Cuadrilla (Patio)</span>
+          <span class="px-1.5 py-0.5 rounded-md text-[10px] font-mono font-bold"
+            [ngClass]="filtroCategoria() === 'patio' ? 'bg-slate-900 text-white' : 'bg-slate-200/80 text-slate-600'">
+            {{ conteoPatio() }}
+          </span>
+        </button>
+
+        <button type="button" (click)="filtroCategoria.set('ayudantes')"
+          class="px-3 py-1.5 rounded-xl transition-all flex items-center gap-1.5 cursor-pointer"
+          [ngClass]="filtroCategoria() === 'ayudantes' ? 'bg-white text-slate-900 shadow-2xs font-bold' : 'text-slate-500 hover:text-slate-800'">
+          <span>👥 Ayudantes de Usuarios</span>
+          <span class="px-1.5 py-0.5 rounded-md text-[10px] font-mono font-bold"
+            [ngClass]="filtroCategoria() === 'ayudantes' ? 'bg-slate-900 text-white' : 'bg-slate-200/80 text-slate-600'">
+            {{ conteoAyudantes() }}
+          </span>
+        </button>
+
+        <button type="button" (click)="filtroCategoria.set('todos')"
+          class="px-3 py-1.5 rounded-xl transition-all flex items-center gap-1.5 cursor-pointer"
+          [ngClass]="filtroCategoria() === 'todos' ? 'bg-white text-slate-900 shadow-2xs font-bold' : 'text-slate-500 hover:text-slate-800'">
+          <span>Todos</span>
+          <span class="px-1.5 py-0.5 rounded-md text-[10px] font-mono font-bold"
+            [ngClass]="filtroCategoria() === 'todos' ? 'bg-slate-900 text-white' : 'bg-slate-200/80 text-slate-600'">
+            {{ conteoTodos() }}
+          </span>
+        </button>
+      </div>
+
+      <div class="text-[11px] text-slate-400 font-medium">
+        @if (filtroCategoria() === 'patio') {
+          Personal oficial registrado por Jeremy para descargas y embarques
+        } @else if (filtroCategoria() === 'ayudantes') {
+          Ayudantes particulares que otros usuarios agregaron a sus faenas
+        } @else {
+          Mostrando todo el personal activo en el sistema
+        }
+      </div>
+    </div>
+  }
+
   <!-- FORMULARIO DE REGISTRO / EDICIÓN -->
   @if (mostrarFormulario()) {
     <div class="bg-white rounded-2xl border border-slate-200/80 p-5 sm:p-7 shadow-[0_1px_3px_rgba(0,0,0,0.02)] space-y-4 animate-fade-in">
@@ -375,9 +422,15 @@
 
           <div class="flex items-center gap-1.5">
             @if (authService.esAdmin()) {
-              <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-100 text-slate-600 font-mono">
-                #{{ idx + 1 }}
-              </span>
+              @if (item.esPatio) {
+                <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-100 text-slate-600 font-mono">
+                  #{{ idx + 1 }} • Patio
+                </span>
+              } @else {
+                <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-blue-50 text-blue-700 border border-blue-200/80">
+                  👤 De: {{ item.usuario_creador || 'Usuario' }}
+                </span>
+              }
             } @else if (esMiTrabajador(item)) {
               <span class="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200/80">
                 Mi Cuenta

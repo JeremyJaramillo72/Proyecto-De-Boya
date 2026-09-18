@@ -65,21 +65,67 @@ export class DataService {
 
     const uId = user.id.toLowerCase().trim();
     const uUser = user.usuario.toLowerCase().trim();
+    const esAdmin = this.authService.esAdmin();
     const listaOriginal = this.todosLosTrabajadores();
 
-    if (this.authService.esAdmin()) {
-      // El administrador ve a toda la cuadrilla del patio
-      return listaOriginal;
-    }
-
-    // Para el rol USUARIO: ve su propia ficha y los trabajadores que él mismo agregó
     return listaOriginal.filter(t => {
+      // 1. Si es la ficha personal del usuario en sesión
       if (this.authService.esMiTrabajador(t)) return true;
 
       const regId = (t.usuario_id || '').toLowerCase().trim();
       const regUser = (t.usuario_creador || '').toLowerCase().trim();
+
+      // 2. Si es el Administrador Jeremy: ve a su cuadrilla oficial del patio
+      // pero NO ve los ayudantes creados por otros usuarios (ej. Ramona de Marco)
+      if (esAdmin) {
+        if (!regUser && !regId) return true;
+        if (regUser === 'jeremy' || regId === 'usr_admin_jeremy') return true;
+        return false;
+      }
+
+      // 3. Para el rol USUARIO: ve los trabajadores que él mismo agregó
       if (regId && regId === uId) return true;
       if (regUser && regUser === uUser) return true;
+
+      return false;
+    });
+  });
+
+  // Ayudantes registrados por otros usuarios (visible para que el Admin pueda auditar/gestionar)
+  public ayudantesDeOtrosUsuarios = computed<Trabajador[]>(() => {
+    const listaOriginal = this.todosLosTrabajadores();
+    return listaOriginal.filter(t => {
+      const regUser = (t.usuario_creador || '').toLowerCase().trim();
+      const regId = (t.usuario_id || '').toLowerCase().trim();
+      if (!regUser && !regId) return false;
+      if (regUser === 'jeremy' || regId === 'usr_admin_jeremy') return false;
+      if (this.authService.esMiTrabajador(t)) return false;
+      return true;
+    });
+  });
+
+  // Trabajadores disponibles para seleccionar en formularios de faena (descargas y embarques)
+  // Incluye la cuadrilla general del patio + los ayudantes particulares del usuario en sesión
+  public trabajadoresParaFaena = computed<Trabajador[]>(() => {
+    const user = this.authService.usuarioActual();
+    if (!user) return [];
+
+    const uId = user.id.toLowerCase().trim();
+    const uUser = user.usuario.toLowerCase().trim();
+    const listaOriginal = this.todosLosTrabajadores();
+
+    return listaOriginal.filter(t => {
+      // 1. Trabajadores oficiales de patio (sin creador o de Jeremy)
+      const regUser = (t.usuario_creador || '').toLowerCase().trim();
+      const regId = (t.usuario_id || '').toLowerCase().trim();
+      const esPatio = (!regUser && !regId) || regUser === 'jeremy' || regId === 'usr_admin_jeremy';
+      if (esPatio) return true;
+
+      // 2. Es el propio usuario
+      if (this.authService.esMiTrabajador(t)) return true;
+
+      // 3. Es un ayudante particular creado por el usuario en sesión
+      if ((regId && regId === uId) || (regUser && regUser === uUser)) return true;
 
       return false;
     });
@@ -127,6 +173,19 @@ export class DataService {
         usuario_creador: match[2],
         obsLimpia: text.replace(/<!--uid:.*?\|usr:.*?-->/g, '').replace(/<!--usr_auth:.*?-->/g, '').trim()
       };
+    }
+    const authMatch = text.match(/<!--usr_auth:(.*?)-->/);
+    if (authMatch) {
+      try {
+        const parsed = JSON.parse(authMatch[1]);
+        if (parsed.usuario) {
+          return {
+            usuario_id: parsed.id || ('usr_' + parsed.usuario),
+            usuario_creador: parsed.usuario,
+            obsLimpia: text.replace(/<!--usr_auth:.*?-->/g, '').trim()
+          };
+        }
+      } catch (e) {}
     }
     return {
       usuario_id: 'usr_admin_jeremy',
@@ -301,30 +360,6 @@ export class DataService {
       listaTrab = this.generarTrabajadoresSemilla();
     }
 
-    // Sincronizar usuarios registrados en el sistema
-    const rawUsuarios = localStorage.getItem('boya_usuarios');
-    if (rawUsuarios) {
-      try {
-        const usuariosSistema: any[] = JSON.parse(rawUsuarios);
-        for (const u of usuariosSistema) {
-          const uNom = (u.nombre || '').trim().toLowerCase();
-          const uUser = (u.usuario || '').trim().toLowerCase();
-          const yaExiste = listaTrab.some(
-            t => (t.nombre || '').trim().toLowerCase() === uNom || (t.alias || '').trim().toLowerCase() === uUser
-          );
-          if (!yaExiste) {
-            listaTrab.push({
-              id: 'trab_' + uUser.replace(/\s+/g, '_'),
-              nombre: u.nombre.trim(),
-              alias: u.usuario.trim(),
-              activo: u.activo !== false
-            });
-          }
-        }
-      } catch (e) {
-        console.warn('Error leyendo boya_usuarios para sincronizar:', e);
-      }
-    }
     this.trabajadores.set(listaTrab);
 
     // 2. Descargas con detalle de trabajadores
@@ -445,31 +480,6 @@ export class DataService {
     for (const sem of semillas) {
       if (!listaTrab.some(t => t.id === sem.id || t.alias === sem.alias || t.nombre === sem.nombre)) {
         listaTrab.push(sem);
-      }
-    }
-
-    // Sincronizar usuarios registrados en el sistema (ej: Prueba)
-    const rawUsuarios = localStorage.getItem('boya_usuarios');
-    if (rawUsuarios) {
-      try {
-        const usuariosSistema: any[] = JSON.parse(rawUsuarios);
-        for (const u of usuariosSistema) {
-          const uNom = (u.nombre || '').trim().toLowerCase();
-          const uUser = (u.usuario || '').trim().toLowerCase();
-          const yaExiste = listaTrab.some(
-            t => (t.nombre || '').trim().toLowerCase() === uNom || (t.alias || '').trim().toLowerCase() === uUser
-          );
-          if (!yaExiste) {
-            listaTrab.push({
-              id: 'trab_' + uUser.replace(/\s+/g, '_'),
-              nombre: u.nombre.trim(),
-              alias: u.usuario.trim(),
-              activo: u.activo !== false
-            });
-          }
-        }
-      } catch (e) {
-        console.warn('Error leyendo boya_usuarios para sincronizar:', e);
       }
     }
 
