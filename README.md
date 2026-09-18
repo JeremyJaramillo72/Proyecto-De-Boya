@@ -46,27 +46,20 @@ La solución está construida sobre una arquitectura modular desacoplada con cap
 
 ```mermaid
 flowchart TD
-    subgraph Frontend["Capa de Cliente (Angular 21 SPA)"]
-        UI["Interfaz Web Reactiva (Signals / Tailwind CSS)"]
-        StateService["Servicio de Estado y Cálculo de Nómina"]
-        LocalStorage["Caché de Persistencia Local (Modo Offline)"]
-    end
+    UI["Cliente Web (Angular 21 SPA)<br/>Signals y Tailwind CSS"]
+    StateService["Servicio de Estado<br/>Logica de Nomina y Liquidacion"]
+    LocalStorage["Almacenamiento Local<br/>Persistencia Offline en Patio"]
+    Postgres[("Base de Datos PostgreSQL<br/>Supabase")]
+    Realtime["Supabase Realtime<br/>Sincronizacion en Vivo"]
+    API["API Microservicio<br/>FastAPI"]
 
-    subgraph BackendAPI["Capa de Servicios REST (FastAPI / Opcional)"]
-        API["FastAPI REST Endpoints\n(Pydantic Models / CORS / Liquidación)"]
-    end
-
-    subgraph CloudData["Capa de Base de Datos en la Nube (Supabase)"]
-        Postgres[("PostgreSQL Database Engine\n(Tablas / Foreign Keys / Vistas SQL)")]
-        Realtime["Supabase Realtime Client"]
-    end
-
-    UI <--> StateService
-    StateService <-->|"Respaldo y Estado Local"| LocalStorage
-    StateService <-->|"Supabase JS Client"| Postgres
-    StateService <-->|"Suscripción a Cambios"| Realtime
-    UI -.->|"API REST (Integraciones Externas)"| API
+    UI --> StateService
+    StateService -->|Respaldo Local| LocalStorage
+    StateService -->|Sincronizacion SQL| Postgres
+    StateService -->|Eventos en Vivo| Realtime
+    UI -->|Peticiones REST| API
 ```
+
 
 ### Principios Arquitectónicos
 1. **Resiliencia Operativa en Campo:** El sistema opera sin interrupciones aun cuando la conexión a internet en aserraderos o patios remotos falle, sincronizando con la base de datos central en cuanto se restablece la conectividad.
