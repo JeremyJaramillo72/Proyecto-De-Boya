@@ -49,24 +49,14 @@ export class AuthService {
     const user = this.usuarioActual();
     if (!user) return false;
 
-    const tId = (t.trabajador_id || t.id || '').trim().toLowerCase();
-    const tNombre = (t.trabajador_nombre || t.nombre || t.alias || '')
-      .normalize('NFD')
-      .replace(/[\u0300-\u036f]/g, '')
-      .toLowerCase()
-      .trim();
+    const normalize = (s: string) => s.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim();
 
-    const uId = user.id.toLowerCase();
-    const uUser = user.usuario
-      .normalize('NFD')
-      .replace(/[\u0300-\u036f]/g, '')
-      .trim()
-      .toLowerCase();
-    const uNombre = user.nombre
-      .normalize('NFD')
-      .replace(/[\u0300-\u036f]/g, '')
-      .trim()
-      .toLowerCase();
+    const uId = normalize(user.id || '');
+    const uUser = normalize(user.usuario || '');
+    const uNombre = normalize(user.nombre || '');
+
+    const tId = normalize(t.id || t.trabajador_id || '');
+    const tNombre = normalize(t.trabajador_nombre || t.nombre || t.alias || '');
 
     // Coincidencia de ID directo
     if (tId && (tId === uId || tId === 'trab_' + uUser || tId === 'usr_' + uUser)) {
@@ -78,9 +68,21 @@ export class AuthService {
       return true;
     }
 
-    // Coincidencia por partes (ej. si el usuario es "Prueba" y el trabajador es "Prueba")
-    if (uUser && uUser.length >= 3 && tNombre.includes(uUser)) return true;
-    if (uNombre && uNombre.length >= 3 && tNombre.includes(uNombre)) return true;
+    // Coincidencia bidireccional de usuario
+    if (uUser && uUser.length >= 3 && (tNombre.includes(uUser) || uUser.includes(tNombre))) {
+      return true;
+    }
+
+    // Coincidencia bidireccional de nombre completo
+    if (uNombre && uNombre.length >= 3 && (tNombre.includes(uNombre) || uNombre.includes(tNombre))) {
+      return true;
+    }
+
+    // Coincidencia por primera palabra del nombre (ej. "Marco" de "Marco Arévalo")
+    const uPrimerNombre = uNombre.split(' ')[0];
+    if (uPrimerNombre && uPrimerNombre.length >= 3 && (tNombre.includes(uPrimerNombre) || uPrimerNombre.includes(tNombre))) {
+      return true;
+    }
 
     return false;
   }

@@ -60,20 +60,38 @@ export class DashboardComponent implements OnInit, OnDestroy {
     return this.dataService.totalCarrosDescargados();
   });
 
+  misEmbarquesCount = computed(() => {
+    return this.dataService.misEmbarques().length;
+  });
+
   misTrailersCount = computed(() => {
     return this.dataService.totalTrailersEmbarcados();
   });
 
   misDescargasCobrar = computed(() => {
     return this.dataService.misDescargas().reduce((sum, d) => {
-      const mi = d.trabajadores.find(t => this.authService.esMiTrabajador(t));
-      const individual = mi ? mi.monto_individual : (d.trabajadores?.[0]?.monto_individual ?? (d.total_pago / (d.trabajadores?.length || 1)));
-      return sum + individual;
+      const trabs = d.trabajadores || [];
+      const mi = trabs.find(t => this.authService.esMiTrabajador(t));
+      const individual = mi ? mi.monto_individual : (trabs[0]?.monto_individual ?? (d.total_pago / (trabs.length || 1)));
+      return sum + Number(individual || 0);
     }, 0);
   });
 
   totalDescargasPatioTotal = computed(() => {
-    return this.dataService.misDescargas().reduce((sum, d) => sum + d.total_pago, 0);
+    return this.dataService.misDescargas().reduce((sum, d) => sum + Number(d.total_pago || 0), 0);
+  });
+
+  misTrailersCobrar = computed(() => {
+    return this.dataService.misEmbarques().reduce((sum, e) => {
+      const trabs = e.trabajadores || [];
+      const mi = trabs.find(t => this.authService.esMiTrabajador(t));
+      const individual = mi ? mi.monto_individual : (trabs[0]?.monto_individual ?? (e.total_pago / (trabs.length || 1)));
+      return sum + Number(individual || 0);
+    }, 0);
+  });
+
+  totalTrailersPatioTotal = computed(() => {
+    return this.dataService.misEmbarques().reduce((sum, e) => sum + Number(e.total_pago || 0), 0);
   });
 
   miPendienteCobro = computed(() => {
@@ -158,31 +176,41 @@ export class DashboardComponent implements OnInit, OnDestroy {
   });
 
   ultimasOperaciones = computed(() => {
+    const esAdmin = this.authService.esAdmin();
+
     const descargas = this.dataService.misDescargas()
       .filter(d => this.dataService.esMiRegistro(d))
-      .map(d => ({
-        id: d.id,
-        tipo: 'DESCARGA' as const,
-        fecha: d.fecha,
-        titulo: `${d.cantidad_carros} Carro(s) • ${d.filas_por_carro} filas`,
-        subtitulo: d.trabajadores.map(t => t.trabajador_nombre).join(', '),
-        monto: (d.trabajadores.find(t => this.authService.esMiTrabajador(t))?.monto_individual) ?? (d.total_pago / (d.trabajadores.length || 1)),
-        totalCarro: d.total_pago,
-        pagado: d.trabajadores.every(t => t.pagado)
-      }));
+      .map(d => {
+        const trabs = d.trabajadores || [];
+        const mi = trabs.find(t => this.authService.esMiTrabajador(t)) || (trabs.length > 0 ? trabs[0] : null);
+        return {
+          id: d.id,
+          tipo: 'DESCARGA' as const,
+          fecha: d.fecha,
+          titulo: `${d.cantidad_carros} Carro(s) • ${d.filas_por_carro} filas`,
+          subtitulo: trabs.map(t => t.trabajador_nombre).join(', '),
+          monto: esAdmin ? d.total_pago : (mi ? mi.monto_individual : (d.total_pago / (trabs.length || 1))),
+          totalCarro: d.total_pago,
+          pagado: esAdmin ? trabs.every(t => t.pagado) : (mi ? mi.pagado : trabs.every(t => t.pagado))
+        };
+      });
 
     const embarques = this.dataService.misEmbarques()
       .filter(e => this.dataService.esMiRegistro(e))
-      .map(e => ({
-        id: e.id,
-        tipo: 'EMBARQUE' as const,
-        fecha: e.fecha,
-        titulo: `${e.cantidad_trailers} Tráiler(s) de Boya`,
-        subtitulo: `${e.trabajadores.length} cargadores`,
-        monto: (e.trabajadores.find(t => this.authService.esMiTrabajador(t))?.monto_individual) ?? e.trabajadores[0]?.monto_individual ?? e.total_pago,
-        totalCarro: e.total_pago,
-        pagado: e.trabajadores.every(t => t.pagado)
-      }));
+      .map(e => {
+        const trabs = e.trabajadores || [];
+        const mi = trabs.find(t => this.authService.esMiTrabajador(t)) || (trabs.length > 0 ? trabs[0] : null);
+        return {
+          id: e.id,
+          tipo: 'EMBARQUE' as const,
+          fecha: e.fecha,
+          titulo: `${e.cantidad_trailers} Tráiler(s) de Boya`,
+          subtitulo: `${trabs.length} cargadores`,
+          monto: esAdmin ? e.total_pago : (mi ? mi.monto_individual : (trabs[0]?.monto_individual ?? (e.total_pago / (trabs.length || 1)))),
+          totalCarro: e.total_pago,
+          pagado: esAdmin ? trabs.every(t => t.pagado) : (mi ? mi.pagado : trabs.every(t => t.pagado))
+        };
+      });
 
     return [...descargas, ...embarques]
       .sort((a, b) => b.fecha.localeCompare(a.fecha))

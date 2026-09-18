@@ -167,32 +167,72 @@ export class DataService {
   );
 
   public totalPendienteCobro = computed(() => {
+    const esAdmin = this.authService.esAdmin();
     let pendiente = 0;
+
     for (const d of this.misDescargas()) {
-      for (const t of d.trabajadores || []) {
-        if (!t.pagado) pendiente += Number(t.monto_individual || 0);
+      if (esAdmin) {
+        for (const t of d.trabajadores || []) {
+          if (!t.pagado) pendiente += Number(t.monto_individual || 0);
+        }
+      } else {
+        const trabs = d.trabajadores || [];
+        const mi = trabs.find(t => this.authService.esMiTrabajador(t)) || (trabs.length > 0 ? trabs[0] : null);
+        if (mi && !mi.pagado) {
+          pendiente += Number(mi.monto_individual || 0);
+        }
       }
     }
+
     for (const e of this.misEmbarques()) {
-      for (const t of e.trabajadores || []) {
-        if (!t.pagado) pendiente += Number(t.monto_individual || 0);
+      if (esAdmin) {
+        for (const t of e.trabajadores || []) {
+          if (!t.pagado) pendiente += Number(t.monto_individual || 0);
+        }
+      } else {
+        const trabs = e.trabajadores || [];
+        const mi = trabs.find(t => this.authService.esMiTrabajador(t)) || (trabs.length > 0 ? trabs[0] : null);
+        if (mi && !mi.pagado) {
+          pendiente += Number(mi.monto_individual || 0);
+        }
       }
     }
+
     return pendiente;
   });
 
   public totalPagadoHistorico = computed(() => {
+    const esAdmin = this.authService.esAdmin();
     let pagado = 0;
+
     for (const d of this.misDescargas()) {
-      for (const t of d.trabajadores || []) {
-        if (t.pagado) pagado += Number(t.monto_individual || 0);
+      if (esAdmin) {
+        for (const t of d.trabajadores || []) {
+          if (t.pagado) pagado += Number(t.monto_individual || 0);
+        }
+      } else {
+        const trabs = d.trabajadores || [];
+        const mi = trabs.find(t => this.authService.esMiTrabajador(t)) || (trabs.length > 0 ? trabs[0] : null);
+        if (mi && mi.pagado) {
+          pagado += Number(mi.monto_individual || 0);
+        }
       }
     }
+
     for (const e of this.misEmbarques()) {
-      for (const t of e.trabajadores || []) {
-        if (t.pagado) pagado += Number(t.monto_individual || 0);
+      if (esAdmin) {
+        for (const t of e.trabajadores || []) {
+          if (t.pagado) pagado += Number(t.monto_individual || 0);
+        }
+      } else {
+        const trabs = e.trabajadores || [];
+        const mi = trabs.find(t => this.authService.esMiTrabajador(t)) || (trabs.length > 0 ? trabs[0] : null);
+        if (mi && mi.pagado) {
+          pagado += Number(mi.monto_individual || 0);
+        }
       }
     }
+
     return pagado;
   });
 

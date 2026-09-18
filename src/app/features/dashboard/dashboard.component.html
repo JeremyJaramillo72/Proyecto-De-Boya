@@ -94,11 +94,13 @@
 
       <div class="mt-4">
         <div class="text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight font-mono">
-          ${{ (authService.esAdmin() ? misDescargasCobrar() : misDescargasCobrar()) | number:'1.2-2' }}
+          ${{ (authService.esAdmin() ? totalDescargasPatioTotal() : misDescargasCobrar()) | number:'1.2-2' }}
         </div>
         <div class="flex items-center justify-between text-xs text-slate-500 mt-1 font-medium">
           <span>{{ misDescargasCount() }} faena(s) • {{ misCarrosCount() }} carro(s)</span>
-          <span class="text-slate-400 font-normal">Patio: ${{ totalDescargasPatioTotal() | number:'1.2-2' }}</span>
+          @if (authService.esAdmin()) {
+            <span class="text-slate-400 font-normal">Patio: ${{ totalDescargasPatioTotal() | number:'1.2-2' }}</span>
+          }
         </div>
       </div>
     </div>
@@ -146,17 +148,26 @@
           </span>
         </div>
         <span class="px-2 py-0.5 rounded-md text-[10px] font-bold uppercase tracking-wider bg-slate-100 text-slate-600 border border-slate-200/80">
-          $7.00 / pers
+          {{ authService.esAdmin() ? '$7.00 / pers' : 'Mi Ganancia' }}
         </span>
       </div>
 
       <div class="mt-4">
-        <div class="text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight font-mono">
-          {{ misTrailersCount() }} <span class="text-sm font-medium text-slate-400">tráilers</span>
-        </div>
-        <p class="text-xs text-slate-500 mt-1 font-medium">
-          {{ authService.esAdmin() ? 'Despachos de bloques de boya a fábrica' : 'Despachos en los que cargué tráilers' }}
-        </p>
+        @if (authService.esAdmin()) {
+          <div class="text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight font-mono">
+            {{ misTrailersCount() }} <span class="text-sm font-medium text-slate-400">tráilers</span>
+          </div>
+          <p class="text-xs text-slate-500 mt-1 font-medium">
+            Total nómina: ${{ totalTrailersPatioTotal() | number:'1.2-2' }}
+          </p>
+        } @else {
+          <div class="text-2xl sm:text-3xl font-bold text-slate-900 tracking-tight font-mono">
+            ${{ misTrailersCobrar() | number:'1.2-2' }}
+          </div>
+          <p class="text-xs text-slate-500 mt-1 font-medium">
+            {{ misEmbarquesCount() }} faena(s) • {{ misTrailersCount() }} tráiler(s)
+          </p>
+        }
       </div>
     </div>
 
